@@ -54,7 +54,7 @@ namespace EH
 
     float elapsedTimeSince(const CudaEvent &start)
     {
-      //this->synchronize();
+      this->synchronize();
       float milliseconds = 0.0f;
       cudaEventElapsedTime(&milliseconds, start.event_, event_);
       return milliseconds;

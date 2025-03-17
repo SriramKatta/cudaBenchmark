@@ -11,7 +11,7 @@ namespace CH
   inline VT *allocHost(size_t N)
   {
     VT *ptr;
-    CHECK_CUDA_ERR(cuadMallocHost(&ptr, N * sizeof(VT)));
+    CHECK_CUDA_ERR(cudaMallocHost(&ptr, N * sizeof(VT)));
     return ptr;
   }
 
@@ -32,13 +32,19 @@ namespace CH
   }
 
   template <typename VT>
-  inline void memcpyH2D(const VT *host, const VT *dev, size_t N, cudaStream_t stream = 0)
+  inline size_t sizeInBytes(const VT *ptr, size_t N)
+  {
+    return N * sizeof(VT);
+  }
+
+  template <typename VT>
+  inline void memcpyH2D(const VT *host, VT *dev, size_t N, cudaStream_t stream = 0)
   {
     CHECK_CUDA_ERR(cudaMemcpyAsync(dev, host, N * sizeof(VT), cudaMemcpyHostToDevice, stream));
   }
 
   template <typename VT>
-  inline void memcpyD2H(const VT *dev, const VT *host, size_t N, cudaStream_t stream = 0)
+  inline void memcpyD2H(const VT *dev, VT *host, size_t N, cudaStream_t stream = 0)
   {
     CHECK_CUDA_ERR(cudaMemcpyAsync(host, dev, N * sizeof(VT), cudaMemcpyDeviceToHost, stream));
   }
@@ -51,7 +57,6 @@ namespace CH
     return ws;
   }
 
-  
   unsigned int getSMCount(int devID = 0)
   {
     CHECK_CUDA_ERR(cudaSetDevice(devID));
@@ -59,7 +64,6 @@ namespace CH
     CHECK_CUDA_ERR(cudaDeviceGetAttribute(&SMcount, cudaDevAttrMultiProcessorCount, devID));
     return SMcount;
   }
-
 
 }
 

@@ -10,7 +10,7 @@ namespace SH
   class CudaStream
   {
   public:
-    CudaStream(unsigned int flags = cudaStreamDefault)
+    CudaStream(unsigned int flags = cudaStreamNonBlocking)
     {
       CHECK_CUDA_ERR(cudaStreamCreateWithFlags(&stream_, flags));
     }
