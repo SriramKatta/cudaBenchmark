@@ -15,7 +15,7 @@ inline void launchGpuCopy(VT *__restrict__ i_data, VT *__restrict__ o_data, size
 }
 
 template <typename VT>
-inline void launchGpuCopyShared(VT *__restrict__ i_data, VT *__restrict__ o_data, size_t N, dim3 blocks, dim3 threads, cudaStream_t stream = 0)
+inline void launchGpuCopyShared(VT *__restrict__ i_data, VT *__restrict__ o_data, size_t N, dim3 blocks, dim3 threads, cudaStream_t stream = cudaStreamDefault)
 {
   size_t smemsize = threads.x * sizeof(VT);
   copy<<<blocks, threads, smemsize, stream>>>(i_data, o_data, N);
@@ -23,7 +23,7 @@ inline void launchGpuCopyShared(VT *__restrict__ i_data, VT *__restrict__ o_data
 }
 
 template <typename VT>
-inline void launchGpuFill(VT *__restrict__ i_data, size_t N, VT fillval, dim3 blocks, dim3 threads, cudaStream_t stream = 0)
+inline void launchGpuFill(VT *__restrict__ i_data, size_t N, VT fillval, dim3 blocks, dim3 threads, cudaStream_t stream = cudaStreamDefault)
 {
   fillWith_n<<<blocks, threads, 0, stream>>>(i_data, N, fillval);
   CHECK_CUDA_LASTERR("FILL WITH N KERNEL FAILED");
@@ -31,7 +31,9 @@ inline void launchGpuFill(VT *__restrict__ i_data, size_t N, VT fillval, dim3 bl
 
 int main(int argc, char const *argv[])
 {
-  size_t N = 1 << 29;
+  if(argc != 2)
+    argv[1] = "20";
+  size_t N = 1 << atoi(argv[1]);
   auto i_data = CH::allocDevice<datatype>(N);
   auto o_data = CH::allocDevice<datatype>(N);
   auto h_data = CH::allocHost<datatype>(N);
