@@ -8,14 +8,14 @@
 using datatype = int;
 
 template <typename VT>
-void launchGpuCopy(VT *__restrict__ i_data, VT *__restrict__ o_data, size_t N, dim3 blocks, dim3 threads, cudaStream_t stream = 0)
+inline void launchGpuCopy(VT *__restrict__ i_data, VT *__restrict__ o_data, size_t N, dim3 blocks, dim3 threads, cudaStream_t stream = 0)
 {
   copy<<<blocks, threads, 0, stream>>>(i_data, o_data, N);
   CHECK_CUDA_LASTERR("COPY KERNEL FAILED");
 }
 
 template <typename VT>
-void launchGpuCopyShared(VT *__restrict__ i_data, VT *__restrict__ o_data, size_t N, dim3 blocks, dim3 threads, cudaStream_t stream = 0)
+inline void launchGpuCopyShared(VT *__restrict__ i_data, VT *__restrict__ o_data, size_t N, dim3 blocks, dim3 threads, cudaStream_t stream = 0)
 {
   size_t smemsize = threads.x * sizeof(VT);
   copy<<<blocks, threads, smemsize, stream>>>(i_data, o_data, N);
@@ -23,7 +23,7 @@ void launchGpuCopyShared(VT *__restrict__ i_data, VT *__restrict__ o_data, size_
 }
 
 template <typename VT>
-void launchGpuFill(VT *__restrict__ i_data, size_t N, VT fillval, dim3 blocks, dim3 threads, cudaStream_t stream = 0)
+inline void launchGpuFill(VT *__restrict__ i_data, size_t N, VT fillval, dim3 blocks, dim3 threads, cudaStream_t stream = 0)
 {
   fillWith_n<<<blocks, threads, 0, stream>>>(i_data, N, fillval);
   CHECK_CUDA_LASTERR("FILL WITH N KERNEL FAILED");
@@ -38,12 +38,13 @@ int main(int argc, char const *argv[])
 
   auto ws = CH::getWarpSize();
   auto smcount = CH::getSMCount();
-  dim3 blks_1d(ws * 16, 1, 1);
-  dim3 thp_1d(smcount * 10, 1, 1);
+  dim3 blks_1d(smcount * 100, 1, 1);
+  dim3 thp_1d(ws * 32, 1, 1);
 
   SH::CudaStream fill1_s, fill2_s, compute_s;
   EH::CudaEvent fill1start_e, fill1stop_e, fill2start_e, fill2stop_e, computestart_e, computestop_e;
 
+  
   fill1start_e.record(fill1_s);
   launchGpuFill(i_data, N, 3, blks_1d, thp_1d, fill1_s);
   fill1stop_e.record(fill1_s);
@@ -56,7 +57,7 @@ int main(int argc, char const *argv[])
   fill2stop_e.synchronize();
 
   computestart_e.record(compute_s);
-  launchGpuCopyShared(i_data, o_data, N, blks_1d, thp_1d, compute_s);
+  launchGpuCopy(i_data, o_data, N, blks_1d, thp_1d, compute_s);
   computestop_e.record(compute_s);
 
   auto fill_1_Time = fill1stop_e.elapsedTimeSince(fill1start_e) / 1e3;
