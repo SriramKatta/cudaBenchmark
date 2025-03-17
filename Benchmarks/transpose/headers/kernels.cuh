@@ -16,7 +16,7 @@ __global__ void fillWith_n(VT *__restrict__ i_data, size_t N, VT fillval)
 
 
 template <typename VT>
-__global__ void copy(VT *__restrict__ i_data, VT *__restrict__ o_data, size_t N)
+__global__ void copy(const VT *__restrict__ i_data, VT *__restrict__ o_data, size_t N)
 {
   auto gridStart = threadIdx.x + blockDim.x * blockIdx.x;
   auto gridStride = blockDim.x * gridDim.x;
