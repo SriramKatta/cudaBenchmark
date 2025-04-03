@@ -15,6 +15,8 @@ namespace CH
     return ptr;
   }
 
+  
+
   template <typename VT>
   inline VT *allocDevice(size_t N)
   {
