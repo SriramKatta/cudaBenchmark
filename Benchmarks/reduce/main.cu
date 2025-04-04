@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 
-using datatype = int;
+using VT = int;
 
 template <typename VT>
 inline void launchGpuCopy(VT *__restrict__ i_data, VT *__restrict__ o_data, size_t N, dim3 blocks, dim3 threads, cudaStream_t stream = 0)
@@ -13,7 +13,6 @@ inline void launchGpuCopy(VT *__restrict__ i_data, VT *__restrict__ o_data, size
   copy<<<blocks, threads, 0, stream>>>(i_data, o_data, N);
   CHECK_CUDA_LASTERR("COPY KERNEL FAILED");
 }
-
 
 template <typename VT>
 inline void launchGpuFill(VT *__restrict__ i_data, size_t N, VT fillval, dim3 blocks, dim3 threads, cudaStream_t stream = cudaStreamDefault)
@@ -24,12 +23,12 @@ inline void launchGpuFill(VT *__restrict__ i_data, size_t N, VT fillval, dim3 bl
 
 int main(int argc, char const *argv[])
 {
-  if(argc != 2)
+  if (argc != 2)
     argv[1] = "20";
   size_t N = 1 << atoi(argv[1]);
-  datatype* i_data = CH::allocDevice<datatype>(N);
-  datatype* o_data = CH::allocDevice<datatype>(N);
-  datatype* h_data = CH::allocHost<datatype>(N);
+  VT *i_data = CH::allocDevice<VT>(N);
+  VT *o_data = CH::allocDevice<VT>(N);
+  VT *h_data = CH::allocHost<VT>(N);
 
   auto ws = CH::getWarpSize();
   auto smcount = CH::getSMCount();
@@ -39,7 +38,6 @@ int main(int argc, char const *argv[])
   SH::CudaStream fill1_s, fill2_s, compute_s;
   EH::CudaEvent fill1start_e, fill1stop_e, fill2start_e, fill2stop_e, computestart_e, computestop_e;
 
-  
   fill1start_e.record(fill1_s);
   launchGpuFill(i_data, N, 3, blks_1d, thp_1d, fill1_s);
   fill1stop_e.record(fill1_s);
