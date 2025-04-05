@@ -21,7 +21,7 @@ fname="$dirname/${SLURM_JOB_ID}_benchmark"
 
 echo "# datasize H2DBW D2HBW kernelBW" > $fname
 
-for i in $(seq 1 111)
+for i in $(seq 8 111)
 do
     ./executable/STREAM_BENCHMARK $i \
     | tee >(awk '{print $3, $8, $13, $18}' \
