@@ -7,6 +7,8 @@
 
 using VT = double;
 
+#define REPS 30
+
 namespace CH = cuda_helpers;
 namespace EH = event_helper;
 namespace SH = stream_helper;
@@ -17,7 +19,7 @@ int main(int argc, char const *argv[]) {
   if (argc != 2)
     argv[1] = "5";
   size_t N = std::pow(1.2, atoi(argv[1]));
-  auto i_data = CH::allocDevice<VT>(N);
+  auto d_data = CH::allocDevice<VT>(N);
   auto h_data = CH::allocHost<VT>(N);
 
   auto ws = CH::getWarpSize();
@@ -26,26 +28,39 @@ int main(int argc, char const *argv[]) {
   dim3 thp_1d(ws * 32, 1, 1);
 
   for (size_t i = 0; i < N; i++) {
-    i_data[i] = 0.0;
+    h_data[i] = 0.0;
   }
 
   TH::cudaTimer H2Dtimer;
   TH::cudaTimer D2Htimer;
   TH::cudaTimer streamtimer;
 
+  H2Dtimer.start();
+  CH::memcpyH2D(h_data, d_data, N);
+  H2Dtimer.stop();
+
+
+  streamtimer.start();
+  for (int rep = 0; rep < REPS; ++rep) {
+    kernel<<<blks_1d, thp_1d>>>(N, d_data);
+  }
+  streamtimer.stop();
+
+  D2Htimer.start();
+  CH::memcpyD2H(d_data, h_data, N);
+  D2Htimer.stop();
 
   auto H2D_Time = H2Dtimer.elapsedSeconds();
   auto D2H_Time = D2Htimer.elapsedSeconds();
-  auto stream_time = streamtimer.elapsedSeconds();
+  auto stream_time = streamtimer.elapsedSeconds() / REPS;
 
-  CH::memcpyD2H(o_data, h_data, N);
 
-  float ds_gb = static_cast<float>(CH::sizeInBytes(i_data, N)) / 1e9;
+  float ds_gb = CH::sizeInGBytes(d_data, N);
 
   printf(
-    "datasize : %3.3f GB | fill1 bandwidth %5.3f GB/s | fill2 bandwidth %5.3f "
-    "GB/s | copy bandwidthtime %5.3f GB/s\n",
-    ds_gb, ds_gb / fill_1_Time, ds_gb / fill_2_Time, ds_gb / copy_time);
+    "datasize : %3.3f GB | H2D bandwidth %5.3f GB/s | D2H bandwidth %5.3f "
+    "GB/s | stream bandwidthtime %5.3f GB/s\n",
+    ds_gb, ds_gb / H2D_Time, ds_gb / D2H_Time, ds_gb / stream_time);
 
   return 0;
 }

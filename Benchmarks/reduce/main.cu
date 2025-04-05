@@ -75,8 +75,8 @@ int main(int argc, char const *argv[]) {
   float ds_gb = static_cast<float>(CH::sizeInBytes(i_data, N)) / 1e9;
 
   printf(
-    "datasize : %3.3f GB | fill1 bandwidth %5.3f GB/s | fill2 bandwidth %5.3f "
-    "GB/s | copy bandwidthtime %5.3f GB/s\n",
+    "datasize : %3.3f GB | fill1 bandwidth %3.3f GB/s | fill2 bandwidth %3.3f "
+    "GB/s | copy bandwidthtime %3.3f GB/s\n",
     ds_gb, ds_gb / fill_1_Time, ds_gb / fill_2_Time, ds_gb / copy_time);
 
   return 0;
