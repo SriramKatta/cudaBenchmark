@@ -5,33 +5,29 @@
 
 #include "cuda_errror_handler.cuh"
 
-namespace SH
-{
-  class CudaStream
-  {
-  public:
-    CudaStream(unsigned int flags = cudaStreamNonBlocking)
-    {
-      CHECK_CUDA_ERR(cudaStreamCreateWithFlags(&stream_, flags));
+namespace stream_helper {
+
+  class cudaStream {
+   public:
+    cudaStream(unsigned int flags = cudaStreamDefault, int priority = 0) {
+      int least, highest;
+      CHECK_CUDA_ERR(cudaDeviceGetStreamPriorityRange(&least, &highest));
+      printf("cuda least priority : %d\ncuda highest priority : %d\n", least,
+             highest);
+      CHECK_CUDA_ERR(cudaStreamCreateWithPriority(&stream_, flags, priority));
     }
 
-    ~CudaStream()
-    {
-      cudaStreamDestroy(stream_);
-    }
+    ~cudaStream() { cudaStreamDestroy(stream_); }
 
-    CudaStream(const CudaStream &) = delete; // Prevent copy
-    CudaStream &operator=(const CudaStream &) = delete;
+    cudaStream(const cudaStream &) = delete;  // Prevent copy
+    cudaStream &operator=(const cudaStream &) = delete;
 
-    CudaStream(CudaStream &&other) noexcept : stream_(other.stream_)
-    {
+    cudaStream(cudaStream &&other) noexcept : stream_(other.stream_) {
       other.stream_ = nullptr;
     }
 
-    CudaStream &operator=(CudaStream &&other) noexcept
-    {
-      if (this != &other)
-      {
+    cudaStream &operator=(cudaStream &&other) noexcept {
+      if (this != &other) {
         cudaStreamDestroy(stream_);
         stream_ = other.stream_;
         other.stream_ = nullptr;
@@ -39,26 +35,24 @@ namespace SH
       return *this;
     }
 
-    cudaStream_t get() const { return stream_; }
+    cudaStream_t get() const noexcept { return stream_; }
 
-    cudaStream_t operator*()
-    {
-      return this->get();
+    int getPriority() const noexcept {
+      int prio;
+      cudaStreamGetPriority(stream_, &prio);
+      return prio;
     }
 
-    void synchronize()
-    {
-      CHECK_CUDA_ERR(cudaStreamSynchronize(stream_));
-    }
+    cudaStream_t operator*() const noexcept { return this->get(); }
 
-    operator cudaStream_t() const{
-      return stream_;
-    }
+    void synchronize() { CHECK_CUDA_ERR(cudaStreamSynchronize(stream_)); }
 
-  private:
+    operator cudaStream_t() const noexcept { return stream_; }
+
+   private:
     cudaStream_t stream_;
   };
 
-} // namespace SH
+}  // namespace stream_helper
 
 #endif
