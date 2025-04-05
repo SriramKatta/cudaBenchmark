@@ -11,7 +11,12 @@ CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
 
+# my compilation filders
 build
 executable
 
+#ide files
 .vscode
+
+#SLURM_FILES
+SLURM_*_FILES
