@@ -58,9 +58,10 @@ int main(int argc, char const *argv[]) {
   float ds_gb = CH::sizeInGBytes(d_data, N);
 
   printf(
-    "datasize : %3.3f GB | H2D bandwidth %5.3f GB/s | D2H bandwidth %5.3f "
+    "datasize : %lu B | H2D bandwidth %5.3f GB/s | D2H bandwidth %5.3f "
     "GB/s | stream bandwidthtime %5.3f GB/s\n",
-    ds_gb, ds_gb / H2D_Time, ds_gb / D2H_Time, ds_gb / stream_time);
+    CH::sizeInBytes(d_data, N), ds_gb / H2D_Time, ds_gb / D2H_Time,
+    ds_gb / stream_time);
 
   return 0;
 }
