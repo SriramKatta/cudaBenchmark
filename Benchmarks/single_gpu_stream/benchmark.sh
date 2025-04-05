@@ -1,4 +1,5 @@
 #!/bin/bash -l
+#SBATCH -J GPU_Bandwidths
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:a100:1
 #SBATCH --partition=a100 -C a100_40
@@ -10,15 +11,20 @@
 unset SLURM_EXPORT_ENV
 
 module load cuda nvhpc cmake
-cmake -S . -B build
+#cmake -S . -B build
 cmake --build build -j
 
-echo "# datasize H2DBW D2HBW kernelBW" > benchmark_$SLURM_JOB_ID
+dirname="RESULTS"
+[ ! -d "$dirname" ] && mkdir -p "$dirname"
+
+fname="$dirname/benchmark_$SLURM_JOB_ID"
+
+echo "# datasize H2DBW D2HBW kernelBW" > $fname
 
 for i in $(seq 1 111)
 do
     ./executable/STREAM_BENCHMARK $i \
-    | tee -a /dev/tty \
-    | awk '{print $3, $8, $13, $18}' >> benchmark_$SLURM_JOB_ID
+    | tee >(awk '{print $3, $8, $13, $18}' \
+    >> $fname)
 done
 

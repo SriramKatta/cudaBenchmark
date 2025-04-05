@@ -61,7 +61,7 @@ int main(int argc, char const *argv[]) {
     "datasize : %lu B | H2D bandwidth %5.3f GB/s | D2H bandwidth %5.3f "
     "GB/s | stream bandwidthtime %5.3f GB/s\n",
     CH::sizeInBytes(d_data, N), ds_gb / H2D_Time, ds_gb / D2H_Time,
-    ds_gb / stream_time);
+    2.0 * ds_gb / stream_time);
 
   return 0;
 }
