@@ -28,7 +28,7 @@ namespace cuda_timer_helper {
       if (millisec < 5e-4) {
         this->elapsedMilliseconds();
       }
-      return millisec / 1e-3;
+      return millisec * 1e-3;
     }
 
 

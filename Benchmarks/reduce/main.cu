@@ -72,12 +72,12 @@ int main(int argc, char const *argv[]) {
     //       h_data[N - i - 1]);
   }
 
-  size_t ds_gb = CH::sizeInBytes(i_data, N) / (1024 * 1024 * 1024);
+  float ds_gb = static_cast<float>(CH::sizeInBytes(i_data, N)) / 1e9;
 
   printf(
-    "fill1 bandwidth %5.3f | fill2 bandwidth %5.3f | copy bandwidthtime %5.3f "
-    "\n",
-    ds_gb / fill_1_Time, ds_gb / fill_2_Time, ds_gb / copy_time);
+    "datasize : %3.3f GB | fill1 bandwidth %5.3f GB/s | fill2 bandwidth %5.3f "
+    "GB/s | copy bandwidthtime %5.3f GB/s\n",
+    ds_gb, ds_gb / fill_1_Time, ds_gb / fill_2_Time, ds_gb / copy_time);
 
   return 0;
 }
