@@ -35,6 +35,11 @@ namespace cuda_helpers {
   }
 
   template <typename VT>
+  inline float sizeInGBytes(const VT *ptr, size_t N) {
+    return static_cast<float>(sizeInBytes(ptr, N)) / 1e9;
+  }
+
+  template <typename VT>
   inline void asyncMemcpyH2D(const VT *host, VT *dev, size_t N,
                              cudaStream_t stream = cudaStreamDefault) {
     CHECK_CUDA_ERR(cudaMemcpyAsync(dev, host, N * sizeof(VT),
