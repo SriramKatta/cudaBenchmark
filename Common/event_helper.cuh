@@ -4,35 +4,27 @@
 #pragma once
 
 #include "cuda_errror_handler.cuh"
+#include "stream_helper.cuh"
 
-namespace EH
-{
-
-  class CudaEvent
-  {
-  public:
-    CudaEvent(unsigned int flags = cudaEventDefault)
-    {
+namespace event_helper {
+  namespace SH = stream_helper;
+  class cudaEvent {
+   public:
+    cudaEvent(unsigned int flags = cudaEventDisableTiming) {
       cudaEventCreateWithFlags(&event_, flags);
     }
 
-    ~CudaEvent()
-    {
-      cudaEventDestroy(event_);
-    }
+    ~cudaEvent() { cudaEventDestroy(event_); }
 
-    CudaEvent(const CudaEvent &) = delete; // Prevent copy
-    CudaEvent &operator=(const CudaEvent &) = delete;
+    cudaEvent(const cudaEvent &) = delete;  // Prevent copy
+    cudaEvent &operator=(const cudaEvent &) = delete;
 
-    CudaEvent(CudaEvent &&other) noexcept : event_(other.event_)
-    {
+    cudaEvent(cudaEvent &&other) noexcept : event_(other.event_) {
       other.event_ = nullptr;
     }
 
-    CudaEvent &operator=(CudaEvent &&other) noexcept
-    {
-      if (this != &other)
-      {
+    cudaEvent &operator=(cudaEvent &&other) noexcept {
+      if (this != &other) {
         cudaEventDestroy(event_);
         event_ = other.event_;
         other.event_ = nullptr;
@@ -42,32 +34,22 @@ namespace EH
 
     cudaEvent_t get() const { return event_; }
 
-    void record(cudaStream_t stream = 0)
-    {
-      cudaEventRecord(event_, stream);
-    }
+    void record(cudaStream_t stream = 0) { cudaEventRecord(event_, stream); }
 
-    void synchronize()
-    {
-      cudaEventSynchronize(event_);
-    }
+    void synchronize() { cudaEventSynchronize(event_); }
 
-    float elapsedTimeSince(const CudaEvent &start)
-    {
+    float elapsedTimeSince(const cudaEvent &start) {
       this->synchronize();
       float milliseconds = 0.0f;
       cudaEventElapsedTime(&milliseconds, start.event_, event_);
       return milliseconds;
     }
-    operator cudaEvent_t() const
-    {
-      return event_;
-    }
+    operator cudaEvent_t() const { return event_; }
 
-  private:
+   private:
     cudaEvent_t event_;
   };
 
-} // namespace EH
+}  // namespace event_helper
 
 #endif

@@ -10,10 +10,6 @@ namespace stream_helper {
   class cudaStream {
    public:
     cudaStream(unsigned int flags = cudaStreamDefault, int priority = 0) {
-      int least, highest;
-      CHECK_CUDA_ERR(cudaDeviceGetStreamPriorityRange(&least, &highest));
-      printf("cuda least priority : %d\ncuda highest priority : %d\n", least,
-             highest);
       CHECK_CUDA_ERR(cudaStreamCreateWithPriority(&stream_, flags, priority));
     }
 
