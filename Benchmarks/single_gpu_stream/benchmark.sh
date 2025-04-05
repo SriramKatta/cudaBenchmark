@@ -17,7 +17,7 @@ cmake --build build -j
 dirname="RESULTS"
 [ ! -d "$dirname" ] && mkdir -p "$dirname"
 
-fname="$dirname/benchmark_$SLURM_JOB_ID"
+fname="$dirname/${SLURM_JOB_ID}_benchmark"
 
 echo "# datasize H2DBW D2HBW kernelBW" > $fname
 
@@ -28,3 +28,5 @@ do
     >> $fname)
 done
 
+module load python 
+python BWplotting.py $fname
