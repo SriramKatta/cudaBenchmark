@@ -11,7 +11,7 @@ namespace cuda_timer_helper {
   namespace SH = stream_helper;
   class cudaTimer {
    public:
-    cudaTimer(const SH::cudaStream &stream)
+    cudaTimer(const SH::cudaStream &stream = 0)
         : start_(cudaEventDefault), stop_(cudaEventDefault), stream_(stream) {}
 
     void start() { cudaEventRecord(start_, stream_); }
