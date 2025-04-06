@@ -25,6 +25,7 @@ int main(int argc, char const *argv[]) {
   auto hos_data = CH::allocHost<double>(N);
   fill(hos_data.get(), N);
   size_t chunk = N / numstream;
+  #pragma omp parallel for 
   for (size_t i = 0; i < numstream; i++) {
     SH::cudaStream stream;
     auto h_ptr = hos_data.get() + (i * chunk);
