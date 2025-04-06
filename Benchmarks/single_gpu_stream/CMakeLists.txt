@@ -21,7 +21,7 @@ include_directories(headers)
 
 # Source file
 # Add target for stream
-set_source_files_properties(main.cc PROPERTIES LANGUAGE CUDA)
-add_executable( ${PROJECT_NAME} main.cc)
+#set_source_files_properties(main.cc PROPERTIES LANGUAGE CUDA)
+add_executable( ${PROJECT_NAME} main.cu)
 target_link_libraries( ${PROJECT_NAME} PRIVATE CCCL::CUB)
 set_target_properties( ${PROJECT_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
