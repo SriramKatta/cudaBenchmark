@@ -19,7 +19,7 @@ int main(int argc, char const *argv[]) {
   stream<<<50, 256, 0, stream1>>>(N, ptr);
   CHECK_CUDA_LASTERR("STREAM KERNEL LAUNCH FAILED");
   CHECK_CUDA_ERR(cudaDeviceSynchronize());
-  CH::asyncMemcpyD2H(devptr, hosptr, N);
+  CH::asyncMemcpyD2H(devptr, hosptr, N, stream);
   CHECK_CUDA_ERR(cudaDeviceSynchronize());
   return 0;
 }
