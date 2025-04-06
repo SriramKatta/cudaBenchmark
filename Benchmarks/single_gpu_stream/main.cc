@@ -12,13 +12,13 @@ namespace SH = stream_helper;
 int main(int argc, char const *argv[]) {
   size_t N = 1024 * 1024;
   auto devptr = CH::allocDevice<double>(N);
+  auto hosptr = CH::allocHost<double>(N);
   CHECK_CUDA_ERR(cudaMemset(devptr.get(), 0, N * sizeof(double)));
   SH::cudaStream stream1;
   auto ptr = devptr.get();
   stream<<<50, 256, 0, stream1>>>(N, ptr);
   CHECK_CUDA_LASTERR("STREAM KERNEL LAUNCH FAILED");
   CHECK_CUDA_ERR(cudaDeviceSynchronize());
-  auto hosptr = CH::allocHost<double>(N);
   CH::asyncMemcpyD2H(devptr, hosptr, N);
   CHECK_CUDA_ERR(cudaDeviceSynchronize());
   return 0;
