@@ -4,7 +4,7 @@
 #pragma once
 
 template <typename VT>
-__global__ void stream(size_t N, VT *a) {
+__global__ void streamkernel(size_t N, VT *a) {
   int start = threadIdx.x + blockDim.x * blockIdx.x;
   int stride = blockDim.x * gridDim.x;
   for (size_t i = start; i < N; i += stride) {

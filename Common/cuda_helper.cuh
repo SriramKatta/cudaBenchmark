@@ -37,7 +37,7 @@ namespace cuda_helpers {
 
   template <typename VT>
   inline host_unique_ptr<VT> allocHost(size_t N) {
-    printf(" host data created\n");
+    printf("host data created\n");
     VT *ptr;
     CHECK_CUDA_ERR(cudaMallocHost(&ptr, N * sizeof(VT)));
     return host_unique_ptr<VT>(ptr);
@@ -45,7 +45,7 @@ namespace cuda_helpers {
 
   template <typename VT>
   inline device_unique_ptr<VT> allocDevice(size_t N) {
-    printf(" dev data created\n");
+    printf("dev data created\n");
     VT *ptr;
     CHECK_CUDA_ERR(cudaMalloc(&ptr, N * sizeof(VT)));
     return device_unique_ptr<VT>(ptr);
