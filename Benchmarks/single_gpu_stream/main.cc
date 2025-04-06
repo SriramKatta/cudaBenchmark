@@ -1,15 +1,25 @@
 #include "cuda_helper.cuh"
+#include "kernels.cuh"
 #include "stream_helper.cuh"
+
+#include "cuda_errror_handler.cuh"
+
+#include <cuda_runtime.h>
 
 namespace CH = cuda_helpers;
 namespace SH = stream_helper;
 
-int main(int argc, char const *argv[])
-{
-  auto devptr = CH::allocDevice<double>(50);
-  auto hosptr = CH::allocHost<double>(50);
+int main(int argc, char const *argv[]) {
+  size_t N = 1024 * 1024;
+  auto devptr = CH::allocDevice<double>(N);
+  CHECK_CUDA_ERR(cudaMemset(devptr.get(), 0, N * sizeof(double)));
   SH::cudaStream stream1;
-  CH::asyncMemcpyH2D(hosptr, devptr, 50);
-  cudaDeviceSynchronize();
+  auto ptr = devptr.get();
+  stream<<<50, 256, 0, stream1>>>(N, ptr);
+  CHECK_CUDA_LASTERR("STREAM KERNEL LAUNCH FAILED");
+  CHECK_CUDA_ERR(cudaDeviceSynchronize());
+  auto hosptr = CH::allocHost<double>(N);
+  CH::asyncMemcpyD2H(devptr, hosptr, N);
+  CHECK_CUDA_ERR(cudaDeviceSynchronize());
   return 0;
 }

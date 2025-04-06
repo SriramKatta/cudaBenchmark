@@ -68,46 +68,11 @@ namespace cuda_helpers {
     return static_cast<float>(sizeInBytes(ptr, N)) / 1e9;
   }
 
-  template <typename VT>
-  inline void asyncMemcpyH2D(const VT *host, VT *dev, size_t N,
-                             const SH::cudaStream &stream = {}) {
-    CHECK_CUDA_ERR(cudaMemcpyAsync(dev, host, N * sizeof(VT),
-                                   cudaMemcpyHostToDevice, stream));
-  }
-
-  template <typename VT>
-  inline void asyncMemcpyH2D(const host_unique_ptr<VT> &host,
-                             device_unique_ptr<VT> &dev, size_t N,
-                             const SH::cudaStream &stream = {}) {
-    asyncMemcpyH2D(host.get(), dev.get(), N, stream);
-  }
 
   template <typename VT>
   inline void memcpyH2D(const VT *host, VT *dev, size_t N) {
     CHECK_CUDA_ERR(
       cudaMemcpy(dev, host, N * sizeof(VT), cudaMemcpyDeviceToHost));
-  }
-
-  template <typename VT>
-  inline void memcpyH2D(const host_unique_ptr<VT> &host,
-                        device_unique_ptr<VT> &dev, size_t N) {
-    memcpyH2D(host.get(), dev.get(), N);
-  }
-
-  template <typename VT>
-  inline void asyncMemcpyD2H(const VT *dev, VT *host, size_t N,
-                             SH::cudaStream stream = {}) {
-    CHECK_CUDA_ERR(cudaMemcpyAsync(host, dev, N * sizeof(VT),
-                                   cudaMemcpyDeviceToHost, stream));
-  }
-
-
-  template <typename VT>
-  inline void asyncMemcpyD2H(const device_unique_ptr<VT> &dev,
-                             host_unique_ptr<VT> &host, size_t N,
-                             SH::cudaStream stream = {}) {
-    asyncMemcpyD2H(host.get(), dev.get(), N * sizeof(VT),
-                   cudaMemcpyDeviceToHost, stream);
   }
 
   template <typename VT>
@@ -117,10 +82,45 @@ namespace cuda_helpers {
   }
 
   template <typename VT>
+  inline void asyncMemcpyH2D(const VT *host, VT *dev, size_t N,
+                             const SH::cudaStream &stream = {}) {
+    CHECK_CUDA_ERR(cudaMemcpyAsync(dev, host, N * sizeof(VT),
+                                   cudaMemcpyHostToDevice, stream));
+  }
+
+  template <typename VT>
+  inline void asyncMemcpyD2H(const VT *dev, VT *host, size_t N,
+                             const SH::cudaStream &stream = {}) {
+    CHECK_CUDA_ERR(cudaMemcpyAsync(host, dev, N * sizeof(VT),
+                                   cudaMemcpyDeviceToHost, stream));
+  }
+
+  template <typename VT>
+  inline void memcpyH2D(const host_unique_ptr<VT> &host,
+                        device_unique_ptr<VT> &dev, size_t N) {
+    memcpyH2D(host.get(), dev.get(), N);
+  }
+
+  template <typename VT>
   inline void memcpyD2H(const device_unique_ptr<VT> &dev,
                         host_unique_ptr<VT> &host, size_t N) {
-    memcpyD2H(host.get(), dev.get(), N * sizeof(VT), cudaMemcpyDeviceToHost);
+    memcpyD2H(host.get(), dev.get(), N);
   }
+
+  template <typename VT>
+  inline void asyncMemcpyD2H(const device_unique_ptr<VT> &dev,
+                             host_unique_ptr<VT> &host, size_t N,
+                             const SH::cudaStream &stream = {}) {
+    asyncMemcpyD2H(dev.get(), host.get(), N, stream);
+  }
+
+  template <typename VT>
+  inline void asyncMemcpyH2D(const host_unique_ptr<VT> &host,
+                             device_unique_ptr<VT> &dev, size_t N,
+                             const SH::cudaStream &stream = {}) {
+    asyncMemcpyH2D(host.get(), dev.get(), N, stream);
+  }
+
 
   unsigned int getWarpSize(int devID = 0) {
     CHECK_CUDA_ERR(cudaSetDevice(devID));
