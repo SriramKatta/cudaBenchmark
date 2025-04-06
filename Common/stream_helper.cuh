@@ -13,41 +13,25 @@ namespace stream_helper {
    public:
     // Default: use_default_stream = true -> use default stream
     // Otherwise, create new stream with given flags and priority
-    cudaStream(bool use_default_stream = true,
-               unsigned int flags = cudaStreamDefault, int priority = 0)
-        : owns_stream_(!use_default_stream) {
-      if (use_default_stream) {
-        stream_ = 0;  // default stream (aka cudaStreamLegacy)
-      } else {
-        CHECK_CUDA_ERR(cudaStreamCreateWithPriority(&stream_, flags, priority));
-      }
+    cudaStream(unsigned int flags = cudaStreamDefault, int priority = 0) {
+      CHECK_CUDA_ERR(cudaStreamCreateWithPriority(&stream_, flags, priority));
     }
 
-    ~cudaStream() {
-      if (owns_stream_ && stream_) {
-        cudaStreamDestroy(stream_);
-      }
-    }
+    ~cudaStream() { cudaStreamDestroy(stream_); }
 
     cudaStream(const cudaStream &) = delete;
     cudaStream &operator=(const cudaStream &) = delete;
 
-    cudaStream(cudaStream &&other) noexcept
-        : stream_(other.stream_), owns_stream_(other.owns_stream_) {
+    cudaStream(cudaStream &&other) noexcept : stream_(other.stream_) {
       other.stream_ = nullptr;
-      other.owns_stream_ = false;
     }
 
     cudaStream &operator=(cudaStream &&other) noexcept {
       if (this != &other) {
-        if (owns_stream_ && stream_) {
-          cudaStreamDestroy(stream_);
-        }
-        stream_ = other.stream_;
-        owns_stream_ = other.owns_stream_;
-        other.stream_ = nullptr;
-        other.owns_stream_ = false;
+        cudaStreamDestroy(stream_);
       }
+      stream_ = other.stream_;
+      other.stream_ = nullptr;
       return *this;
     }
 
@@ -67,7 +51,6 @@ namespace stream_helper {
 
    private:
     cudaStream_t stream_ = nullptr;
-    bool owns_stream_ = false;
   };
 
 }  // namespace stream_helper
