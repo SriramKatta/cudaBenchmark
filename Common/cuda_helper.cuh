@@ -16,17 +16,11 @@ namespace SH = stream_helper;
 namespace cuda_helpers {
   // Type alias for a unique_ptr managing CUDA memory
   struct device_deleter {
-    void operator()(void *ptr) {
-      printf("dev data released\n");
-      CHECK_CUDA_ERR(cudaFree(ptr));
-    }
+    void operator()(void *ptr) { CHECK_CUDA_ERR(cudaFree(ptr)); }
   };
 
   struct host_deleter {
-    void operator()(void *ptr) {
-      printf("host data released\n");
-      CHECK_CUDA_ERR(cudaFreeHost(ptr));
-    }
+    void operator()(void *ptr) { CHECK_CUDA_ERR(cudaFreeHost(ptr)); }
   };
 
   template <typename VT>
@@ -34,29 +28,6 @@ namespace cuda_helpers {
 
   template <typename VT>
   using host_unique_ptr = std::unique_ptr<VT, host_deleter>;
-
-  template <typename VT>
-  inline host_unique_ptr<VT> allocHost(size_t N) {
-    printf("host data created\n");
-    VT *ptr;
-    CHECK_CUDA_ERR(cudaMallocHost(&ptr, N * sizeof(VT)));
-    return host_unique_ptr<VT>(ptr);
-  }
-
-  template <typename VT>
-  inline device_unique_ptr<VT> allocDevice(size_t N) {
-    printf("dev data created\n");
-    VT *ptr;
-    CHECK_CUDA_ERR(cudaMalloc(&ptr, N * sizeof(VT)));
-    return device_unique_ptr<VT>(ptr);
-  }
-
-  template <typename VT>
-  inline device_unique_ptr<VT> allocManaged(size_t N) {
-    VT *ptr;
-    CHECK_CUDA_ERR(cuadMallocManaged(&ptr, N * sizeof(VT)));
-    return device_unique_ptr<VT>(ptr);
-  }
 
   template <typename VT>
   inline size_t sizeInBytes(const VT *ptr, size_t N) {
@@ -68,6 +39,36 @@ namespace cuda_helpers {
     return static_cast<float>(sizeInBytes(ptr, N)) / 1e9;
   }
 
+  template <typename VT, typename DT>
+  inline float sizeInGBytes(const std::unique_ptr<VT, DT> &ptr, size_t N) {
+    return sizeInGBytes(ptr.get(), N);
+  }
+
+  template <typename VT, typename DT>
+  inline size_t sizeInBytes(const std::unique_ptr<VT, DT> &ptr, size_t N) {
+    return sizeInBytes(ptr.get(), N);
+  }
+
+  template <typename VT>
+  inline host_unique_ptr<VT> allocHost(size_t N) {
+    VT *ptr;
+    CHECK_CUDA_ERR(cudaMallocHost(&ptr, N * sizeof(VT)));
+    return host_unique_ptr<VT>(ptr);
+  }
+
+  template <typename VT>
+  inline device_unique_ptr<VT> allocDevice(size_t N) {
+    VT *ptr;
+    CHECK_CUDA_ERR(cudaMalloc(&ptr, N * sizeof(VT)));
+    return device_unique_ptr<VT>(ptr);
+  }
+
+  template <typename VT>
+  inline device_unique_ptr<VT> allocManaged(size_t N) {
+    VT *ptr;
+    CHECK_CUDA_ERR(cuadMallocManaged(&ptr, N * sizeof(VT)));
+    return device_unique_ptr<VT>(ptr);
+  }
 
   template <typename VT>
   inline void memcpyH2D(const VT *host, VT *dev, size_t N) {
