@@ -1,5 +1,7 @@
 #include <cuda_runtime.h>
 #include <cstdio>
+#include <cmath>
+#include <cstdlib>
 
 #include "cuda_errror_handler.cuh"
 #include "cuda_helper.cuh"
@@ -41,7 +43,8 @@ int main(int argc, char const *argv[]) {
 
   streamtimer.start();
   for (size_t rep = 0; rep < NUM_REPS; rep++) {
-    streamkernel<<<blks, thpblks>>>(dev_data.get(), N);
+    SH::cudaStream stream;
+    streamkernel<<<blks, thpblks,0, stream>>>(dev_data.get(), N);
   }
   streamtimer.stop();
 
