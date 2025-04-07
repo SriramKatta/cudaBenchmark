@@ -23,8 +23,8 @@ include_directories(headers)
 # Add target for stream
 #set_source_files_properties(main.cc PROPERTIES LANGUAGE CUDA)
 add_executable( ${PROJECT_NAME} main.cu)
-#target_link_libraries( ${PROJECT_NAME} PRIVATE CUDA::cudart_static)
-#target_link_libraries( ${PROJECT_NAME} PRIVATE CCCL::CUB)
+target_link_libraries( ${PROJECT_NAME} PRIVATE CUDA::cudart)
+target_link_libraries( ${PROJECT_NAME} PRIVATE CCCL::CUB)
 set_target_properties( ${PROJECT_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 find_package(OpenMP REQUIRED)
