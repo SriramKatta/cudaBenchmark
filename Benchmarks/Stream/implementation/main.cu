@@ -50,7 +50,7 @@ int main(int argc, char const *argv[]) {
 
       CH::asyncMemcpyH2D(host + chunkstart, dev + chunkstart, currentChunkSize,
                          stream);
-      stream_kernel<<<NumBlocks, NumThredsPBlock>>>(dev + chunkstart,
+      stream_kernel<<<NumBlocks, NumThredsPBlock,0, stream>>>(dev + chunkstart,
                                                     currentChunkSize);
       CHECK_CUDA_LASTERR("Stream Launch failure");
       CH::asyncMemcpyD2H(dev + chunkstart, host + chunkstart, currentChunkSize,
