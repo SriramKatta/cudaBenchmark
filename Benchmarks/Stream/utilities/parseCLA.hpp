@@ -32,10 +32,7 @@ void parseCLA(int argc, char const *argv[], IT &N, IT &NumReps, IT &NumBlocks,
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm);
   po::notify(vm);
-  if (vm.count("help")) {
-    std::cout << desc;
-    exit(0);
-  }
+  
   if (vm.count("num_elements")) {
     N = vm["num_elements"].as<IT>();
   }
@@ -50,6 +47,10 @@ void parseCLA(int argc, char const *argv[], IT &N, IT &NumReps, IT &NumBlocks,
   }
   if (vm.count("Streams")) {
     numStreams = vm["Streams"].as<IT>();
+  }
+  if (vm.count("help")) {
+    std::cout << desc;
+    exit(0);
   }
 }
 
