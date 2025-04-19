@@ -15,6 +15,7 @@ set(CMAKE_CXX_STANDARD 14)
 include(cmake/CPM.cmake)
 include(cmake/boost.cmake)
 include(cmake/fmt.cmake)
+include(cmake/NVTX.cmake)
 
 include_directories(../../Common)
 

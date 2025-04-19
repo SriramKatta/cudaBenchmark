@@ -1,5 +1,6 @@
 #include <fmt/format.h>
 #include <exception>
+#include <nvtx3/nvtx3.hpp>
 
 #include "cuda_errror_handler.cuh"
 #include "cuda_helper.cuh"
@@ -39,6 +40,7 @@ int main(int argc, char const *argv[]) {
   }
 
   for (size_t rep = 0; rep < NumReps; rep++) {
+    nvtx3::scoped_range loop{"main loop"};
     size_t baseChunkSize = N / NumStreams;
     size_t remainder = N % NumStreams;
     size_t chunkstart = 0;
