@@ -30,8 +30,10 @@ int main(int argc, char const *argv[]) {
     fmt::print("Error : {}\n", e.what());
     exit(1);
   }
-  auto *dev = CH::allocDevice<double>(N);
-  auto *host = CH::allocHost<double>(N);
+  auto dev_ptr = CH::allocDevice<double>(N);
+  auto host_ptr = CH::allocHost<double>(N);
+  auto dev = dev_ptr.get();
+  auto host = host_ptr.get();
   for (size_t i = 0; i < N; i++) {
     host[i] = 0.0;
   }
@@ -57,7 +59,5 @@ int main(int argc, char const *argv[]) {
   CHECK_CUDA_ERR(cudaDeviceSynchronize());
   checkSolution(host, N, NumReps);
 
-  CHECK_CUDA_ERR(cudaFree(dev));
-  CHECK_CUDA_ERR(cudaFreeHost(host));
   return 0;
 }
