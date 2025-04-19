@@ -10,8 +10,14 @@
 
 unset SLURM_EXPORT_ENV
 
-module load cuda nvhpc cmake
-#cmake -S . -B build
+#needed for sbatch to work
+if [ -n "$SLURM_JOB_ID" ]; then
+    module load cuda nvhpc cmake
+    export http_proxy=http://proxy.nhr.fau.de:80
+    export https_proxy=http://proxy.nhr.fau.de:80
+fi
+
+cmake -S . -B build
 cmake --build build -j
 
 dirname="RESULTS"
@@ -28,5 +34,5 @@ do
     >> $fname)
 done
 
-module load python 
+module load python
 python BWplotting.py $fname
