@@ -16,6 +16,8 @@ include(cmake/CPM.cmake)
 include(cmake/boost.cmake)
 include(cmake/fmt.cmake)
 
-add_subdirectory(header)
+include_directories(../../Common)
+
+include_directories(header)
 add_subdirectory(utilities)
 add_subdirectory(implementation)
