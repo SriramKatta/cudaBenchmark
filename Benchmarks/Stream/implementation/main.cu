@@ -57,8 +57,8 @@ int main(int argc, char const *argv[]) {
                          stream);
       chunkstart += currentChunkSize;
     }
+    CHECK_CUDA_ERR(cudaDeviceSynchronize());
   }
-  CHECK_CUDA_ERR(cudaDeviceSynchronize());
   checkSolution(host, N, NumReps);
 
   return 0;
