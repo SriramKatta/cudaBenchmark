@@ -4,12 +4,15 @@
 
 #include "cuda_errror_handler.cuh"
 #include "cuda_helper.cuh"
+#include "cuda_timer.cuh"
 #include "kernels.hpp"
 #include "parseCLA.hpp"
 #include "stream_helper.cuh"
 
 namespace CH = cuda_helpers;
 namespace SH = stream_helper;
+namespace TH = cuda_timer_helper;
+
 template <typename VT>
 void checkSolution(VT *data, size_t N, size_t reps) {
   VT error = static_cast<VT>(0);
@@ -38,7 +41,8 @@ int main(int argc, char const *argv[]) {
   for (size_t i = 0; i < N; i++) {
     host[i] = 0.0;
   }
-
+  TH::cudaTimer fullwork;
+  fullwork.start();
   for (size_t rep = 0; rep < NumReps; rep++) {
     nvtx3::scoped_range loop{"main loop"};
     size_t baseChunkSize = N / NumStreams;
@@ -50,8 +54,8 @@ int main(int argc, char const *argv[]) {
 
       CH::asyncMemcpyH2D(host + chunkstart, dev + chunkstart, currentChunkSize,
                          stream);
-      stream_kernel<<<NumBlocks, NumThredsPBlock,0, stream>>>(dev + chunkstart,
-                                                    currentChunkSize);
+      stream_kernel<<<NumBlocks, NumThredsPBlock, 0, stream>>>(
+        dev + chunkstart, currentChunkSize);
       CHECK_CUDA_LASTERR("Stream Launch failure");
       CH::asyncMemcpyD2H(dev + chunkstart, host + chunkstart, currentChunkSize,
                          stream);
@@ -59,6 +63,8 @@ int main(int argc, char const *argv[]) {
     }
     CHECK_CUDA_ERR(cudaDeviceSynchronize());
   }
+  auto elapsed_time = fullwork.elapsedSeconds() / NumReps;
+  fmt::print("elapsed time per rep is {}", elapsed_time);
   checkSolution(host, N, NumReps);
 
   return 0;
