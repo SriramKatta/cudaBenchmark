@@ -67,8 +67,8 @@ int main(int argc, char const *argv[]) {
   auto elapsed_time = fullwork.elapsedSeconds() / NumReps;
   fmt::print("elapsed time V1 per rep is {}\n", elapsed_time);
   //checkSolution(host, N, NumReps);
-
-  fullwork.start();
+  TH::cudaTimer fullwork2; 
+  fullwork2.start();
   for (size_t rep = 0; rep < NumReps; rep++) {
     nvtx3::scoped_range loop{"main loop V2"};
     size_t baseChunkSize = N / NumStreams;
@@ -98,8 +98,8 @@ int main(int argc, char const *argv[]) {
     }
     CHECK_CUDA_ERR(cudaDeviceSynchronize());
   }
-  fullwork.stop();
-  elapsed_time = fullwork.elapsedSeconds() / NumReps;
+  fullwork2.stop();
+  elapsed_time = fullwork2.elapsedSeconds() / NumReps;
   fmt::print("elapsed time V2 per rep is {}\n", elapsed_time);
 
 
