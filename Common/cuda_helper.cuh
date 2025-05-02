@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <memory>
 
-#include "cuda_errror_handler.cuh"
+#include "cuda_error_handler.cuh"
 #include "stream_helper.cuh"
 
 namespace SH = stream_helper;

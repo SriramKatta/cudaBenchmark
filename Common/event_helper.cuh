@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "cuda_errror_handler.cuh"
+#include "cuda_error_handler.cuh"
 #include "stream_helper.cuh"
 
 namespace event_helper {

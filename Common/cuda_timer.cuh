@@ -2,7 +2,7 @@
 #define CUDA_TIMER_CUH
 #pragma once
 
-#include "cuda_errror_handler.cuh"
+#include "cuda_error_handler.cuh"
 #include "event_helper.cuh"
 #include "stream_helper.cuh"
 

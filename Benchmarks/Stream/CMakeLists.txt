@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 
 project(stream LANGUAGES CUDA CXX)
 
+find_package(CUDAToolkit REQUIRED)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/executable)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -19,8 +21,7 @@ include(cmake/boost.cmake)
 include(cmake/fmt.cmake)
 include(cmake/NVTX.cmake)
 
-include_directories(../../Common)
-
-include_directories(header)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../Common" "${CMAKE_CURRENT_BINARY_DIR}/Common")
 add_subdirectory(utilities)
+add_subdirectory(header)
 add_subdirectory(implementation)

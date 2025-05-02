@@ -5,7 +5,7 @@
 
 #include <cuda_runtime.h>
 
-#include "cuda_errror_handler.cuh"
+#include "cuda_error_handler.cuh"
 
 namespace stream_helper {
 
