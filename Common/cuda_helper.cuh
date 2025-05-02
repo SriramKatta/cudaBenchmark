@@ -125,20 +125,24 @@ namespace cuda_helpers {
 
   unsigned int getWarpSize(int devID = 0) {
     CHECK_CUDA_ERR(cudaSetDevice(devID));
-    int ws;
-    CHECK_CUDA_ERR(cudaDeviceGetAttribute(&ws, cudaDevAttrWarpSize, devID));
+    static int ws = 0;
+    if (ws == 0) {
+      CHECK_CUDA_ERR(cudaDeviceGetAttribute(&ws, cudaDevAttrWarpSize, devID));
+    }
     return ws;
   }
 
 
   unsigned int getSMCount(int devID = 0) {
     CHECK_CUDA_ERR(cudaSetDevice(devID));
-    int SMcount;
-    CHECK_CUDA_ERR(
-      cudaDeviceGetAttribute(&SMcount, cudaDevAttrMultiProcessorCount, devID));
+    static int SMcount = 0;
+    if (SMcount == 0) {
+      CHECK_CUDA_ERR(cudaDeviceGetAttribute(
+        &SMcount, cudaDevAttrMultiProcessorCount, devID));
+    }
     return SMcount;
   }
-
+  //static int SMcount = 0;
 }  // namespace cuda_helpers
 
 #endif
