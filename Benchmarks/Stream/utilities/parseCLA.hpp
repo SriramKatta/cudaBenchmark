@@ -13,12 +13,13 @@
 namespace po = boost::program_options;
 namespace CH = cuda_helpers;
 
-template <typename IT>
+using IT = size_t;
+
 void parseCLA(int argc, char const *argv[], IT &N, IT &NumReps, IT &NumBlocks,
-              IT &NumThredsPBlock, IT &numStreams) {
+              IT &NumThredsPBlock, IT &numStreams, bool& doCheck) {
 
-
-  po::options_description desc("Allowed Options", 100);
+  po::options_description desc(fmt::format("Usage : {} [OPTIONS]", argv[0]),
+                               100);
   // clang-format off
     desc.add_options()
     ("help,h", "produce help message")
@@ -27,27 +28,14 @@ void parseCLA(int argc, char const *argv[], IT &N, IT &NumReps, IT &NumBlocks,
     ("blocks,B", po::value<IT>(&NumBlocks)->default_value(CH::getSMCount() * 16), "set number of blocks")
     ("threads_per_block,T", po::value<IT>(&NumThredsPBlock)->default_value(CH::getWarpSize() * 16), "set number of threads per block")
     ("Streams,S", po::value<IT>(&numStreams)->default_value(4), "set number of threads per block")
+    ("CHECK,C", po::bool_switch(&doCheck)->default_value(false), "set number of threads per block")
     ;
   // clang-format on
   po::variables_map vm;
-  po::store(po::parse_command_line(argc, argv, desc), vm);
+  const auto parsedoptions = po::command_line_parser(argc, argv).options(desc).run();
+  po::store(parsedoptions, vm);
   po::notify(vm);
-  
-  if (vm.count("num_elements")) {
-    N = vm["num_elements"].as<IT>();
-  }
-  if (vm.count("reps")) {
-    NumReps = vm["reps"].as<IT>();
-  }
-  if (vm.count("blocks")) {
-    NumBlocks = vm["blocks"].as<IT>();
-  }
-  if (vm.count("threads_per_block")) {
-    NumThredsPBlock = vm["threads_per_block"].as<IT>();
-  }
-  if (vm.count("Streams")) {
-    numStreams = vm["Streams"].as<IT>();
-  }
+
   if (vm.count("help")) {
     std::cout << desc;
     exit(0);
