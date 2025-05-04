@@ -11,7 +11,7 @@ namespace event_helper {
   class cudaEvent {
    public:
     cudaEvent(unsigned int flags = cudaEventDisableTiming) {
-      cudaEventCreateWithFlags(&event_, flags);
+      CHECK_CUDA_ERR(cudaEventCreateWithFlags(&event_, flags));
     }
 
     ~cudaEvent() { cudaEventDestroy(event_); }
@@ -34,17 +34,26 @@ namespace event_helper {
 
     cudaEvent_t get() const { return event_; }
 
-    void record(cudaStream_t stream = 0) { cudaEventRecord(event_, stream); }
+    void record(cudaStream_t stream = 0) {
+      CHECK_CUDA_ERR(cudaEventRecord(event_, stream));
+    }
 
-    void synchronize() { cudaEventSynchronize(event_); }
+    void synchronize() const { CHECK_CUDA_ERR(cudaEventSynchronize(event_)); }
 
-    float elapsedTimeSince(const cudaEvent &start) {
+    float elapsedTimeSince(const cudaEvent &start) const {
       this->synchronize();
       float milliseconds = 0.0f;
       cudaEventElapsedTime(&milliseconds, start.event_, event_);
       return milliseconds;
     }
+
     operator cudaEvent_t() const { return event_; }
+
+    // Query event status
+    bool isReady() const { return cudaEventQuery(event_) == cudaSuccess; }
+
+    // Wait for event (alternative to synchronize)
+    void wait() const { this->synchronize(); }
 
    private:
     cudaEvent_t event_;
