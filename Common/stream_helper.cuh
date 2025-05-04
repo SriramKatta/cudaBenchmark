@@ -35,6 +35,11 @@ namespace stream_helper {
       return *this;
     }
 
+    // Disallow construction from an `int`, e.g., `0`.
+    cudaStream(int) = delete;
+    // Disallow construction from `nullptr`.
+    cudaStream(std::nullptr_t) = delete;
+
     cudaStream_t get() const noexcept { return stream_; }
 
     int getPriority() const {
@@ -50,7 +55,7 @@ namespace stream_helper {
     operator cudaStream_t() const noexcept { return stream_; }
 
    private:
-    cudaStream_t stream_ = nullptr;
+    cudaStream_t stream_ = 0;
   };
 
 }  // namespace stream_helper
