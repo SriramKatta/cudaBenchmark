@@ -66,14 +66,34 @@ namespace cuda_helpers {
   template <typename VT>
   inline device_unique_ptr<VT> allocManaged(size_t N) {
     VT *ptr;
-    CHECK_CUDA_ERR(cuadMallocManaged(&ptr, N * sizeof(VT)));
+    CHECK_CUDA_ERR(cudaMallocManaged(&ptr, N * sizeof(VT)));
     return device_unique_ptr<VT>(ptr);
+  }
+
+  template <typename VT>
+  inline void memsetDevice(VT *dev, int value, size_t N) {
+    CHECK_CUDA_ERR(cudaMemset(dev, value, N * sizeof(VT)));
+  }
+
+  template <typename VT>
+  inline void memsetDevice(device_unique_ptr<VT> &dev, int value, size_t N) {
+    memsetDevice(dev.get(), value, N);
+  }
+
+  template <typename VT>
+  inline void initHost(VT *ptr, size_t N, VT value = VT()) {
+    std::fill(ptr, ptr + N, value);
+  }
+
+  template <typename VT>
+  inline void initHost(host_unique_ptr<VT> &ptr, size_t N, VT value = VT()) {
+    initHost(ptr.get(), N, value);
   }
 
   template <typename VT>
   inline void memcpyH2D(const VT *host, VT *dev, size_t N) {
     CHECK_CUDA_ERR(
-      cudaMemcpy(dev, host, N * sizeof(VT), cudaMemcpyDeviceToHost));
+      cudaMemcpy(dev, host, N * sizeof(VT), cudaMemcpyHostToDevice));
   }
 
   template <typename VT>
@@ -122,7 +142,6 @@ namespace cuda_helpers {
     asyncMemcpyH2D(host.get(), dev.get(), N, stream);
   }
 
-
   unsigned int getWarpSize(int devID = 0) {
     CHECK_CUDA_ERR(cudaSetDevice(devID));
     static int ws = 0;
@@ -132,17 +151,15 @@ namespace cuda_helpers {
     return ws;
   }
 
-
   unsigned int getSMCount(int devID = 0) {
     CHECK_CUDA_ERR(cudaSetDevice(devID));
-    static int SMcount = 0;
-    if (SMcount == 0) {
+    static int SMcount = -1;
+    if (SMcount == -1) {
       CHECK_CUDA_ERR(cudaDeviceGetAttribute(
         &SMcount, cudaDevAttrMultiProcessorCount, devID));
     }
     return SMcount;
   }
-  //static int SMcount = 0;
 }  // namespace cuda_helpers
 
 #endif
