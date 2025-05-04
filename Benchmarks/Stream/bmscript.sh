@@ -12,7 +12,8 @@ module load nvhpc
 module load cmake
 
 mkdir simdata
-touch simdata/resfile
+fname=./simdata/resfile_$SLURM_JOBID
+touch $fname
 
 export http_proxy=http://proxy.nhr.fau.de:80
 export https_proxy=http://proxy.nhr.fau.de:80
@@ -24,11 +25,12 @@ echo "varying problem size ":
 echo "--------------------------------------------------------------"
 
 val12pow=116
-for ((i = 0; i <= $val12pow; i += 4)); do
+for ((i = 0; i <= $val12pow; i += 1)); do
     echo "$i of $val12pow start"
     numelem=$(echo "12^$i/10^$i" | bc)
-    srun ./executable/stream -CV -N $numelem -R 24 -B 3456 -T 256 >> ./simdata/resfile
+    srun ./executable/stream -CV -N $numelem -R 24 -B 3456 -T 256 >> $fname
 done
 
-source plotspace/bin/activate
-python parseploBW.py ./simdata/resfile
+module load python
+source ~/plotspace/bin/activate
+python parseplotBW.py $fname

@@ -32,10 +32,10 @@ for match in pattern.findall(content):
     rows.append(row)
 
 # Create DataFrame from the extracted data
-#df = pd.DataFrame(rows)
+df = pd.DataFrame(rows)
 
 # Print column names to verify they exist
-print("DataFrame columns:", df.columns)
+#print("DataFrame columns:", df.columns)
 
 # If no columns are missing, proceed with plotting
 if 'V1' in df.columns and 'V2' in df.columns:
