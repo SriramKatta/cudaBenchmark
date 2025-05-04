@@ -25,7 +25,7 @@ namespace event_helper {
 
     cudaEvent &operator=(cudaEvent &&other) noexcept {
       if (this != &other) {
-        cudaEventDestroy(event_);
+        CHECK_CUDA_ERR(cudaEventDestroy(event_));
         event_ = other.event_;
         other.event_ = nullptr;
       }
@@ -43,7 +43,7 @@ namespace event_helper {
     float elapsedTimeSince(const cudaEvent &start) const {
       this->synchronize();
       float milliseconds = 0.0f;
-      cudaEventElapsedTime(&milliseconds, start.event_, event_);
+      CHECK_CUDA_ERR(cudaEventElapsedTime(&milliseconds, start.event_, event_));
       return milliseconds;
     }
 
