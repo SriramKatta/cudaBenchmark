@@ -12,12 +12,16 @@ namespace cuda_timer_helper {
   class cudaTimer {
    public:
     cudaTimer()
-        : start_(cudaEventDefault), stop_(cudaEventDefault), stream_(0) {
-      defstream = true;
-    }
+        : start_(cudaEventDefault),
+          stop_(cudaEventDefault),
+          stream_(SH::cudaStream()),
+          defstream(true) {}
 
     cudaTimer(const SH::cudaStream &stream)
-        : start_(cudaEventDefault), stop_(cudaEventDefault), stream_(stream) {}
+        : start_(cudaEventDefault),
+          stop_(cudaEventDefault),
+          stream_(stream),
+          defstream(false) {}
 
     void start() {
       if (defstream)
@@ -50,9 +54,9 @@ namespace cuda_timer_helper {
    private:
     EH::cudaEvent start_;
     EH::cudaEvent stop_;
-    const SH::cudaStream &stream_;
-    float millisec = 0.0f;
+    SH::cudaStream &stream_;
     bool defstream = false;
+    float millisec = 0.0f;
   };
 
 }  // namespace cuda_timer_helper

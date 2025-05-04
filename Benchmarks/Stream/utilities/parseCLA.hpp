@@ -28,7 +28,7 @@ void parseCLA(int argc, char const *argv[], IT &N, IT &NumReps, IT &NumBlocks,
     ("blocks,B", po::value<IT>(&NumBlocks)->default_value(CH::getSMCount() * 16), "set number of blocks")
     ("threads_per_block,T", po::value<IT>(&NumThredsPBlock)->default_value(CH::getWarpSize() * 16), "set number of threads per block")
     ("Streams,S", po::value<IT>(&numStreams)->default_value(4), "set number of threads per block")
-    ("CHECK,C", po::bool_switch(&doCheck)->default_value(false), "set number of threads per block")
+    ("CHECK,C", po::bool_switch(&doCheck)->default_value(true), "set number of threads per block")
     ;
   // clang-format on
   po::variables_map vm;

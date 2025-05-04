@@ -12,8 +12,8 @@
 #include "cuda_error_handler.cuh"
 #include "cuda_helper.cuh"
 #include "cuda_timer.cuh"
-#include "stream_helper.cuh"
 #include "kernels.hpp"
+#include "stream_helper.cuh"
 
 namespace CH = cuda_helpers;
 namespace SH = stream_helper;
@@ -63,28 +63,50 @@ void benchmarkRunWithStreamPool(size_t NumReps, size_t N, size_t NumStreams,
 template <typename VT>
 void benchmarkRunWithPerChunkStream(size_t NumReps, size_t N, size_t NumStreams,
                                     VT *host, VT *dev, size_t NumBlocks,
-                                    size_t NumThredsPBlock) {
+                                    size_t NumThredsPBlock,
+                                    bool verboseinfo = true) {
   for (size_t rep = 0; rep < NumReps; rep++) {
     nvtx3::scoped_range loop{"main loop perchunk stream"};
     size_t baseChunkSize = N / NumStreams;
     size_t remainder = N % NumStreams;
     size_t chunkstart = 0;
 
+    std::vector<float> timerh2d(NumStreams);
+    std::vector<float> timerd2h(NumStreams);
+    std::vector<float> timerkern(NumStreams);
+
+
     for (size_t i = 0; i < NumStreams; i++) {
       SH::cudaStream streams;
+      if (verboseinfo) {
+        TH::cudaTimer timerh2d_is(streams);
+        TH::cudaTimer timerd2h_is(streams);
+        TH::cudaTimer timerkern_is(streams);
+      }
       size_t currentChunkSize = baseChunkSize + (i < remainder ? 1 : 0);
 
-
+      timerh2d_is.start();
       CH::asyncMemcpyH2D(host + chunkstart, dev + chunkstart, currentChunkSize,
                          streams);
+      timerh2d_is.stop();
 
+      timerkern_is.start();
       stream_kernel<<<NumBlocks, NumThredsPBlock, 0, streams>>>(
         dev + chunkstart, currentChunkSize);
+      timerkern_is.start();
       CHECK_CUDA_LASTERR("Kernel Launch failure");
 
+      timerd2h_is.start();
       CH::asyncMemcpyD2H(dev + chunkstart, host + chunkstart, currentChunkSize,
                          streams);
+      timerd2h_is.stop();
       chunkstart += currentChunkSize;
+
+      if (verboseinfo) {
+        timerh2d[i] = timerh2d_is.elapsedSeconds();
+        timerkern[i] = timerkern_is.elapsedSeconds();
+        timerd2h[i] = timerd2h_is.elapsedSeconds();
+      }
     }
     CHECK_CUDA_ERR(cudaDeviceSynchronize());
   }
@@ -96,8 +118,11 @@ void checkSolution(VT *data, size_t N, size_t reps) {
   for (size_t i = 0; i < N; i++) {
     error += std::abs(data[i] - reps);
   }
-  if (fabs(error) < std::numeric_limits<VT>::epsilon()) {
+  if (fabs(error) > 1e-12) {
     fmt::print("Check failed\n", error);
+    for (size_t i = 0; i < N; ++i) {
+      fmt::print("{} ", data[i]);
+    }
     exit(EXIT_FAILURE);
   }
 }
