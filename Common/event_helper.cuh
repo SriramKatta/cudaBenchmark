@@ -14,7 +14,7 @@ namespace event_helper {
       CHECK_CUDA_ERR(cudaEventCreateWithFlags(&event_, flags));
     }
 
-    ~cudaEvent() { cudaEventDestroy(event_); }
+    ~cudaEvent() { CHECK_CUDA_ERR(cudaEventDestroy(event_)); }
 
     cudaEvent(const cudaEvent &) = delete;  // Prevent copy
     cudaEvent &operator=(const cudaEvent &) = delete;
