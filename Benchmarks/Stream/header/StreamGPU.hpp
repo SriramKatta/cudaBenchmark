@@ -20,96 +20,140 @@ namespace SH = stream_helper;
 namespace TH = cuda_timer_helper;
 
 template <typename VT>
-void setHostArr(size_t N, VT *host) {
-  for (size_t i = 0; i < N; i++) {
-    host[i] = 0.0;
-  }
-}
+std::tuple<float, float, float> benchmarkRunWithStreamPool(
+  size_t NumReps, size_t N, size_t NumStreams, VT *host, VT *dev,
+  size_t NumBlocks, size_t NumThredsPBlock, bool verboseinfo) {
 
-template <typename VT>
-void benchmarkRunWithStreamPool(size_t NumReps, size_t N, size_t NumStreams,
-                                VT *host, VT *dev, size_t NumBlocks,
-                                size_t NumThredsPBlock) {
+  size_t baseChunkSize = N / NumStreams;
+  size_t remainder = N % NumStreams;
+
+  float timerh2d{0.0};
+  float timerd2h{0.0};
+  float timerkern{0.0};
+  TH::cudaTimer timer;
+
+
   for (size_t rep = 0; rep < NumReps; rep++) {
     nvtx3::scoped_range loop{"main loop stream pool"};
-    size_t baseChunkSize = N / NumStreams;
-    size_t remainder = N % NumStreams;
     std::vector<SH::cudaStream> streams(NumStreams);
+
+
     for (size_t chunkstart = 0, i = 0; i < NumStreams; i++) {
       size_t currentChunkSize = baseChunkSize + (i < remainder ? 1 : 0);
+      if (verboseinfo) {
+        timer.setStream(streams[i]);
+        timer.start();
+      }
       CH::asyncMemcpyH2D(host + chunkstart, dev + chunkstart, currentChunkSize,
                          streams[i]);
+      if (verboseinfo) {
+        timer.stop();
+        timerh2d += timer.elapsedSeconds();
+      }
       chunkstart += currentChunkSize;
     }
 
     for (size_t chunkstart = 0, i = 0; i < NumStreams; i++) {
       size_t currentChunkSize = baseChunkSize + (i < remainder ? 1 : 0);
+      if (verboseinfo) {
+        timer.setStream(streams[i]);
+        timer.start();
+      }
       stream_kernel<<<NumBlocks, NumThredsPBlock, 0, streams[i]>>>(
         dev + chunkstart, currentChunkSize);
+      if (verboseinfo) {
+        timer.stop();
+        timerkern += timer.elapsedSeconds();
+      }
       CHECK_CUDA_LASTERR("Stream Launch failure");
       chunkstart += currentChunkSize;
     }
 
     for (size_t chunkstart = 0, i = 0; i < NumStreams; i++) {
       size_t currentChunkSize = baseChunkSize + (i < remainder ? 1 : 0);
+      if (verboseinfo) {
+        timer.setStream(streams[i]);
+        timer.start();
+      }
       CH::asyncMemcpyD2H(dev + chunkstart, host + chunkstart, currentChunkSize,
                          streams[i]);
+      if (verboseinfo) {
+        timer.stop();
+        timerd2h += timer.elapsedSeconds();
+      }
       chunkstart += currentChunkSize;
     }
     CHECK_CUDA_ERR(cudaDeviceSynchronize());
   }
+
+  return {timerh2d / NumReps, timerkern / NumReps, timerd2h / NumReps};
 }
 
 template <typename VT>
-void benchmarkRunWithPerChunkStream(size_t NumReps, size_t N, size_t NumStreams,
-                                    VT *host, VT *dev, size_t NumBlocks,
-                                    size_t NumThredsPBlock,
-                                    bool verboseinfo = true) {
+std::tuple<float, float, float> benchmarkRunWithPerChunkStream(
+  size_t NumReps, size_t N, size_t NumStreams, VT *host, VT *dev,
+  size_t NumBlocks, size_t NumThredsPBlock, bool verboseinfo = true) {
+  size_t baseChunkSize = N / NumStreams;
+  size_t remainder = N % NumStreams;
+  float timerh2d{0.0};
+  float timerd2h{0.0};
+  float timerkern{0.0};
+  TH::cudaTimer h2d;
+  TH::cudaTimer kernel;
+  TH::cudaTimer d2h;
   for (size_t rep = 0; rep < NumReps; rep++) {
     nvtx3::scoped_range loop{"main loop perchunk stream"};
-    size_t baseChunkSize = N / NumStreams;
-    size_t remainder = N % NumStreams;
     size_t chunkstart = 0;
-
-    std::vector<float> timerh2d(NumStreams);
-    std::vector<float> timerd2h(NumStreams);
-    std::vector<float> timerkern(NumStreams);
-
-
     for (size_t i = 0; i < NumStreams; i++) {
       SH::cudaStream streams;
       if (verboseinfo) {
-        TH::cudaTimer timerh2d_is(streams);
-        TH::cudaTimer timerd2h_is(streams);
-        TH::cudaTimer timerkern_is(streams);
+        h2d.setStream(streams);
+        kernel.setStream(streams);
+        d2h.setStream(streams);
       }
+
       size_t currentChunkSize = baseChunkSize + (i < remainder ? 1 : 0);
 
-      timerh2d_is.start();
+      if (verboseinfo)
+        h2d.start();
+
       CH::asyncMemcpyH2D(host + chunkstart, dev + chunkstart, currentChunkSize,
                          streams);
-      timerh2d_is.stop();
 
-      timerkern_is.start();
+      if (verboseinfo)
+        h2d.stop();
+
+      if (verboseinfo)
+        kernel.start();
+
       stream_kernel<<<NumBlocks, NumThredsPBlock, 0, streams>>>(
         dev + chunkstart, currentChunkSize);
-      timerkern_is.start();
+
+      if (verboseinfo)
+        kernel.stop();
+
       CHECK_CUDA_LASTERR("Kernel Launch failure");
 
-      timerd2h_is.start();
+      if (verboseinfo)
+        d2h.start();
+
       CH::asyncMemcpyD2H(dev + chunkstart, host + chunkstart, currentChunkSize,
                          streams);
-      timerd2h_is.stop();
+
+      if (verboseinfo)
+        d2h.stop();
+
       chunkstart += currentChunkSize;
 
       if (verboseinfo) {
-        timerh2d[i] = timerh2d_is.elapsedSeconds();
-        timerkern[i] = timerkern_is.elapsedSeconds();
-        timerd2h[i] = timerd2h_is.elapsedSeconds();
+        timerh2d += h2d.elapsedSeconds();
+        timerd2h += d2h.elapsedSeconds();
+        timerkern += kernel.elapsedSeconds();
       }
     }
     CHECK_CUDA_ERR(cudaDeviceSynchronize());
   }
+  return {timerh2d / NumReps, timerkern / NumReps, timerd2h / NumReps};
 }
 
 template <typename VT>
