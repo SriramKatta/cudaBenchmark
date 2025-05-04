@@ -54,10 +54,18 @@ namespace stream_helper {
 
     operator cudaStream_t() const noexcept { return stream_; }
 
+    static std::pair<int, int> getPriorityRange() {
+      if (least == 0 && highest == 0) {
+        CHECK_CUDA_ERR(cudaDeviceGetStreamPriorityRange(&least, &highest));
+      }
+      return {least, highest};
+    }
+
    private:
     cudaStream_t stream_ = 0;
+    inline static int least = 0;
+    inline static int highest = 0;
   };
-
 }  // namespace stream_helper
 
 #endif
