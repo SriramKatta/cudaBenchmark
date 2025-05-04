@@ -2,8 +2,8 @@
 #include <exception>
 
 #include "StreamGPU.hpp"
-#include "parseCLA.hpp"
 #include "cuda_timer.cuh"
+#include "parseCLA.hpp"
 
 namespace TH = cuda_timer_helper;
 
@@ -14,27 +14,31 @@ int main(int argc, char const *argv[]) {
   size_t NumBlocks;
   size_t NumThredsPBlock;
   size_t NumStreams;
+  bool verbose;
   bool doCheck;
-  try {
-    parseCLA(argc, argv, N, NumReps, NumBlocks, NumThredsPBlock, NumStreams,
-             doCheck);
-  } catch (std::exception &e) {
-    fmt::print("Error : {}\n", e.what());
-    exit(1);
-  }
+  parseCLA(argc, argv, N, NumReps, NumBlocks, NumThredsPBlock, NumStreams,
+           verbose, doCheck);
+
   auto dev_ptr = CH::allocDevice<double>(N);
   auto host_ptr = CH::allocHost<double>(N);
+
+  auto sizeinGB = CH::sizeInGBytes(dev_ptr, N);
 
   auto dev = dev_ptr.get();
   auto host = host_ptr.get();
 
-  setHostArr(N, host);
+  CH::initHost(host_ptr, N, 0.0);
   TH::cudaTimer fullwork;
 
   fullwork.start();
-  benchmarkRunWithPerChunkStream(NumReps, N, NumStreams, host, dev, NumBlocks,
-                                 NumThredsPBlock);
+  auto [h2dv1, kernv1, d2hv1] = benchmarkRunWithPerChunkStream(
+    NumReps, N, NumStreams, host, dev, NumBlocks, NumThredsPBlock, verbose);
   fullwork.stop();
+
+  if (verbose)
+    fmt::print("{} {:.3f} {:.3f} {:.3f}\n", static_cast<size_t>(sizeinGB * 1e9),
+               sizeinGB / h2dv1, sizeinGB * 2.0 / kernv1, sizeinGB / d2hv1);
+
 
   if (doCheck) {
     checkSolution(host, N, NumReps);
@@ -43,19 +47,25 @@ int main(int argc, char const *argv[]) {
   auto elapsed_time = fullwork.elapsedSeconds() / NumReps;
   fmt::print("elapsed time V1 per rep is {}\n", elapsed_time);
 
-  setHostArr(N, host);
-  TH::cudaTimer fullwork2;
+  CH::initHost(host_ptr, N, 0.0);
 
-  fullwork2.start();
-  benchmarkRunWithStreamPool(NumReps, N, NumStreams, host, dev, NumBlocks,
-                             NumThredsPBlock);
-  fullwork2.stop();
+  fullwork.start();
+
+  auto [h2dv2, kernv2, d2hv2] = benchmarkRunWithStreamPool(
+    NumReps, N, NumStreams, host, dev, NumBlocks, NumThredsPBlock, verbose);
+
+  fullwork.stop();
 
   if (doCheck) {
     checkSolution(host, N, NumReps);
   }
 
-  elapsed_time = fullwork2.elapsedSeconds() / NumReps;
+  if (verbose)
+    fmt::print("{} {:.3f} {:.3f} {:.3f}\n", static_cast<size_t>(sizeinGB * 1e9),
+               sizeinGB / h2dv2, sizeinGB * 2.0 / kernv2, sizeinGB / d2hv2);
+
+
+  elapsed_time = fullwork.elapsedSeconds() / NumReps;
   fmt::print("elapsed time V2 per rep is {}\n", elapsed_time);
 
   return 0;
