@@ -33,6 +33,6 @@ inline void __getLastCudaError(const char *errorMessage, const char *file,
 
 #define CHECK_CUDA_ERR(val) check((val), #val, __FILE__, __LINE__)
 
-#define CHECK_CUDA_LASTERR(msg) __getLastCudaError(msg, __FILE__, __LINE__)
+#define CHECK_CUDA_LASTERR(...) __getLastCudaError(#__VA_ARGS__, __FILE__, __LINE__)
 
 #endif
