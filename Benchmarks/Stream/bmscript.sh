@@ -24,11 +24,11 @@ echo "--------------------------------------------------------------"
 echo "varying problem size ":
 echo "--------------------------------------------------------------"
 
-val12pow=116
+val12pow=111
 for ((i = 0; i <= $val12pow; i += 1)); do
     echo "$i of $val12pow start"
     numelem=$(echo "12^$i/10^$i" | bc)
-    srun ./executable/stream -CV -N $numelem -R 24 -B 3456 -T 256 >> $fname
+    ./executable/stream -CV -N $numelem -R 24 -B 3456 -T 256 -S 15 >> $fname
 done
 
 module load python

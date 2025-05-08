@@ -41,8 +41,8 @@ df = pd.DataFrame(rows)
 if 'V1' in df.columns and 'V2' in df.columns:
     # Plot Elapsed Time vs Data Size
     plt.figure(figsize=(10, 6))
-    plt.plot(df['D'], df['V1'], label='V1 Elapsed Time', color='blue')
-    plt.plot(df['D'], df['V2'], label='V2 Elapsed Time', color='green')
+    plt.plot(df['D'], df['D'] / df['V1'], label='V1 Elapsed Time', color='blue')
+    plt.plot(df['D'], df['D'] / df['V2'], label='V2 Elapsed Time', color='green')
     plt.xlabel('Data Size (D)')
     plt.ylabel('Elapsed Time (s)')
     plt.title('Elapsed Time vs Data Size')
