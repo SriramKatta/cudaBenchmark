@@ -40,20 +40,10 @@ namespace event_helper {
 
     void synchronize() const { CHECK_CUDA_ERR(cudaEventSynchronize(event_)); }
 
-    float elapsedTimeSince(const cudaEvent &start) const {
-      this->synchronize();
-      float milliseconds = 0.0f;
-      CHECK_CUDA_ERR(cudaEventElapsedTime(&milliseconds, start.event_, event_));
-      return milliseconds;
-    }
-
-    operator cudaEvent_t() const { return event_; }
+    explicit operator cudaEvent_t() const { return event_; }
 
     // Query event status
     bool isReady() const { return cudaEventQuery(event_) == cudaSuccess; }
-
-    // Wait for event (alternative to synchronize)
-    void wait() const { this->synchronize(); }
 
    private:
     cudaEvent_t event_;

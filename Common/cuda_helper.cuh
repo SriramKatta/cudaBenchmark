@@ -35,8 +35,18 @@ namespace cuda_helpers {
   }
 
   template <typename VT>
+  inline size_t sizeInBytes(size_t N) {
+    return N * sizeof(VT);
+  }
+
+  template <typename VT>
   inline float sizeInGBytes(const VT *ptr, size_t N) {
     return static_cast<float>(sizeInBytes(ptr, N)) / 1e9;
+  }
+
+  template <typename VT>
+  inline float sizeInGBytes(size_t N) {
+    return static_cast<float>(sizeInBytes<VT>(N)) / 1e9;
   }
 
   template <typename VT, typename DT>
@@ -81,12 +91,13 @@ namespace cuda_helpers {
   }
 
   template <typename VT>
-  inline void initHost(VT *ptr, size_t N, VT value = VT()) {
+  inline void initHost(VT *ptr, size_t N, const VT &value = VT()) {
     std::fill(ptr, ptr + N, value);
   }
 
   template <typename VT>
-  inline void initHost(host_unique_ptr<VT> &ptr, size_t N, VT value = VT()) {
+  inline void initHost(host_unique_ptr<VT> &ptr, size_t N,
+                       const VT &value = VT()) {
     initHost(ptr.get(), N, value);
   }
 
@@ -97,35 +108,42 @@ namespace cuda_helpers {
   }
 
   template <typename VT>
-  inline void memcpyD2H(const VT *dev, VT *host, size_t N) {
-    CHECK_CUDA_ERR(
-      cudaMemcpy(host, dev, N * sizeof(VT), cudaMemcpyDeviceToHost));
-  }
-
-  template <typename VT>
-  inline void asyncMemcpyH2D(const VT *host, VT *dev, size_t N,
-                             const SH::cudaStream &stream = {}) {
-    CHECK_CUDA_ERR(cudaMemcpyAsync(dev, host, N * sizeof(VT),
-                                   cudaMemcpyHostToDevice, stream));
-  }
-
-  template <typename VT>
-  inline void asyncMemcpyD2H(const VT *dev, VT *host, size_t N,
-                             const SH::cudaStream &stream = {}) {
-    CHECK_CUDA_ERR(cudaMemcpyAsync(host, dev, N * sizeof(VT),
-                                   cudaMemcpyDeviceToHost, stream));
-  }
-
-  template <typename VT>
   inline void memcpyH2D(const host_unique_ptr<VT> &host,
                         device_unique_ptr<VT> &dev, size_t N) {
     memcpyH2D(host.get(), dev.get(), N);
   }
 
   template <typename VT>
+  inline void memcpyD2H(const VT *dev, VT *host, size_t N) {
+    CHECK_CUDA_ERR(
+      cudaMemcpy(host, dev, N * sizeof(VT), cudaMemcpyDeviceToHost));
+  }
+
+  template <typename VT>
   inline void memcpyD2H(const device_unique_ptr<VT> &dev,
                         host_unique_ptr<VT> &host, size_t N) {
-    memcpyD2H(host.get(), dev.get(), N);
+    memcpyD2H(dev.get(), host.get(), N);
+  }
+
+  template <typename VT>
+  inline void asyncMemcpyH2D(const VT *host, VT *dev, size_t N,
+                             const SH::cudaStream &stream) {
+    CHECK_CUDA_ERR(cudaMemcpyAsync(dev, host, N * sizeof(VT),
+                                   cudaMemcpyHostToDevice, stream));
+  }
+
+  template <typename VT>
+  inline void asyncMemcpyH2D(const host_unique_ptr<VT> &host,
+                             device_unique_ptr<VT> &dev, size_t N,
+                             const SH::cudaStream &stream) {
+    asyncMemcpyH2D(host.get(), dev.get(), N, stream);
+  }
+
+  template <typename VT>
+  inline void asyncMemcpyD2H(const VT *dev, VT *host, size_t N,
+                             const SH::cudaStream &stream) {
+    CHECK_CUDA_ERR(cudaMemcpyAsync(host, dev, N * sizeof(VT),
+                                   cudaMemcpyDeviceToHost, stream));
   }
 
   template <typename VT>
@@ -135,16 +153,9 @@ namespace cuda_helpers {
     asyncMemcpyD2H(dev.get(), host.get(), N, stream);
   }
 
-  template <typename VT>
-  inline void asyncMemcpyH2D(const host_unique_ptr<VT> &host,
-                             device_unique_ptr<VT> &dev, size_t N,
-                             const SH::cudaStream &stream = {}) {
-    asyncMemcpyH2D(host.get(), dev.get(), N, stream);
-  }
-
   unsigned int getWarpSize(int devID = 0) {
     CHECK_CUDA_ERR(cudaSetDevice(devID));
-    static int ws = 0;
+    thread_local static int ws = 0;
     if (ws == 0) {
       CHECK_CUDA_ERR(cudaDeviceGetAttribute(&ws, cudaDevAttrWarpSize, devID));
     }
@@ -153,7 +164,7 @@ namespace cuda_helpers {
 
   unsigned int getSMCount(int devID = 0) {
     CHECK_CUDA_ERR(cudaSetDevice(devID));
-    static int SMcount = -1;
+    thread_local static int SMcount = -1;
     if (SMcount == -1) {
       CHECK_CUDA_ERR(cudaDeviceGetAttribute(
         &SMcount, cudaDevAttrMultiProcessorCount, devID));

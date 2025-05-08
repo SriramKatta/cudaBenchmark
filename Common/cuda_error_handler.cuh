@@ -1,8 +1,6 @@
 #ifndef CUDA_ERROR_HANDLER_CUH
 #define CUDA_ERROR_HANDLER_CUH
 
-#pragma once
-
 #include <cuda_runtime.h>
 #include <stdio.h>
 
@@ -17,7 +15,7 @@ inline void check(T result, char const *const func, const char *const file,
   }
 }
 
-inline void __getLastCudaError(const char *errorMessage, const char *file,
+inline void __getLastCudaError(const char *errorMessage = nullptr, const char *file,
                                const int line) {
   cudaError_t err = cudaGetLastError();
 
@@ -34,5 +32,4 @@ inline void __getLastCudaError(const char *errorMessage, const char *file,
 #define CHECK_CUDA_ERR(val) check((val), #val, __FILE__, __LINE__)
 
 #define CHECK_CUDA_LASTERR(...) __getLastCudaError(#__VA_ARGS__, __FILE__, __LINE__)
-
 #endif

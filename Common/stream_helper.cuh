@@ -11,13 +11,11 @@ namespace stream_helper {
 
   class cudaStream {
    public:
-    // Default: use_default_stream = true -> use default stream
-    // Otherwise, create new stream with given flags and priority
     cudaStream(unsigned int flags = cudaStreamDefault, int priority = 0) {
       CHECK_CUDA_ERR(cudaStreamCreateWithPriority(&stream_, flags, priority));
     }
 
-    ~cudaStream() { cudaStreamDestroy(stream_); }
+    ~cudaStream() { CHECK_CUDA_ERR(cudaStreamDestroy(stream_)); }
 
     cudaStream(const cudaStream &) = delete;
     cudaStream &operator=(const cudaStream &) = delete;
@@ -28,7 +26,7 @@ namespace stream_helper {
 
     cudaStream &operator=(cudaStream &&other) noexcept {
       if (this != &other) {
-        cudaStreamDestroy(stream_);
+        CHECK_CUDA_ERR(cudaStreamDestroy(stream_));
       }
       stream_ = other.stream_;
       other.stream_ = nullptr;
@@ -48,11 +46,9 @@ namespace stream_helper {
       return prio;
     }
 
-    cudaStream_t operator*() const noexcept { return this->get(); }
-
     void synchronize() { CHECK_CUDA_ERR(cudaStreamSynchronize(stream_)); }
 
-    operator cudaStream_t() const noexcept { return stream_; }
+    explicit operator cudaStream_t() const noexcept { return stream_; }
 
     static std::pair<int, int> getPriorityRange() {
       if (least == 0 && highest == 0) {
@@ -62,9 +58,9 @@ namespace stream_helper {
     }
 
    private:
-    cudaStream_t stream_ = 0;
-    inline static int least = 0;
-    inline static int highest = 0;
+    cudaStream_t stream_;
+    inline static thread_local int least = 0;
+    inline static thread_local int highest = 0;
   };
 }  // namespace stream_helper
 
