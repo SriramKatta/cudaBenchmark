@@ -41,16 +41,16 @@ df = pd.DataFrame(rows)
 if 'V1' in df.columns and 'V2' in df.columns:
     # Plot Elapsed Time vs Data Size
     plt.figure(figsize=(10, 6))
-    plt.plot(df['D'], df['D'] / df['V1'], label='V1 Elapsed Time', color='blue')
-    plt.plot(df['D'], df['D'] / df['V2'], label='V2 Elapsed Time', color='green')
+    plt.plot(df['D'] , df['D'] * 2 / df['V1'], label='V1 Elapsed Time', color='blue')
+    plt.plot(df['D'] , df['D'] * 2 / df['V2'], label='V2 Elapsed Time', color='green')
     plt.xlabel('Data Size (D)')
-    plt.ylabel('Elapsed Time (s)')
+    plt.ylabel('Bandwidth (GB/s)')
     plt.title('Elapsed Time vs Data Size')
     plt.legend()
     plt.xscale('log')  # Set x-axis to log scale
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("elapsed_time_vs_data_size.png")
+    plt.savefig(f"{sys.argv[1]}_toatal_bandwidth_vs_data_size.png")
 
     # Plot H2D bandwidth vs Data Size
     plt.figure(figsize=(10, 6))
@@ -63,12 +63,12 @@ if 'V1' in df.columns and 'V2' in df.columns:
     plt.xscale('log')  # Set x-axis to log scale
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("h2d_bandwidth_vs_data_size.png")
+    plt.savefig(f"{sys.argv[1]}_h2d_bandwidth_vs_data_size.png")
 
     # Plot Kernel bandwidth vs Data Size
     plt.figure(figsize=(10, 6))
-    plt.plot(df['D'] * 2, df['V1_kernel'], label='V1 Kernel Bandwidth', color='blue')
-    plt.plot(df['D'] * 2, df['V2_kernel'], label='V2 Kernel Bandwidth', color='green')
+    plt.plot(df['D'] , df['V1_kernel'], label='V1 Kernel Bandwidth', color='blue')
+    plt.plot(df['D'] , df['V2_kernel'], label='V2 Kernel Bandwidth', color='green')
     plt.xlabel('Data Size (D)')
     plt.ylabel('Kernel Bandwidth (GB/s)')
     plt.title('Kernel Bandwidth vs Data Size')
@@ -76,7 +76,7 @@ if 'V1' in df.columns and 'V2' in df.columns:
     plt.xscale('log')  # Set x-axis to log scale
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("kernel_bandwidth_vs_data_size.png")
+    plt.savefig(f"{sys.argv[1]}_kernel_bandwidth_vs_data_size.png")
 
     # Plot D2H bandwidth vs Data Size
     plt.figure(figsize=(10, 6))
@@ -89,6 +89,6 @@ if 'V1' in df.columns and 'V2' in df.columns:
     plt.xscale('log')  # Set x-axis to log scale
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig("d2h_bandwidth_vs_data_size.png")
+    plt.savefig(f"{sys.argv[1]}_d2h_bandwidth_vs_data_size.png")
 
 print("All plots saved as PNG files.")
