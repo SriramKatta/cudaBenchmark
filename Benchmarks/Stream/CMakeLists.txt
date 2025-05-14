@@ -18,8 +18,10 @@ include(cmake/CPM.cmake)
 include(cmake/boost.cmake)
 include(cmake/fmt.cmake)
 include(cmake/NVTX.cmake)
+include(cmake/cccl.cmake)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../Common" "${CMAKE_CURRENT_BINARY_DIR}/Common")
+
 add_subdirectory(utilities)
 add_subdirectory(header)
 add_subdirectory(implementation)

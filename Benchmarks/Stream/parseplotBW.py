@@ -67,8 +67,8 @@ if 'V1' in df.columns and 'V2' in df.columns:
 
     # Plot Kernel bandwidth vs Data Size
     plt.figure(figsize=(10, 6))
-    plt.plot(df['D'], df['V1_kernel'], label='V1 Kernel Bandwidth', color='blue')
-    plt.plot(df['D'], df['V2_kernel'], label='V2 Kernel Bandwidth', color='green')
+    plt.plot(df['D'] * 2, df['V1_kernel'], label='V1 Kernel Bandwidth', color='blue')
+    plt.plot(df['D'] * 2, df['V2_kernel'], label='V2 Kernel Bandwidth', color='green')
     plt.xlabel('Data Size (D)')
     plt.ylabel('Kernel Bandwidth (GB/s)')
     plt.title('Kernel Bandwidth vs Data Size')

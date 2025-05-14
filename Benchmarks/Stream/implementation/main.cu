@@ -1,4 +1,6 @@
 #include <fmt/format.h>
+#include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
 #include <exception>
 
 #include "StreamGPU.hpp"
@@ -19,16 +21,16 @@ int main(int argc, char const *argv[]) {
   parseCLA(argc, argv, N, NumReps, NumBlocks, NumThredsPBlock, NumStreams,
            verbose, doCheck);
 
-  auto dev_ptr = CH::allocDevice<double>(N);
-  auto host_ptr = CH::allocHost<double>(N);
+  thrust::device_vector<double> dev_vec(N);
+  thrust::device_vector<double> host_vec(N);
 
-  auto sizeinGB = CH::sizeInGBytes(dev_ptr, N);
+  auto sizeinGB = dev_vec.size() * sizeof(dev_vec[0]);
 
 
-  auto dev = dev_ptr.get();
-  auto host = host_ptr.get();
+  auto dev = thrust::raw_pointer_cast(dev_vec.data());
+  auto host = thrust::raw_pointer_cast(host_vec.data());
 
-  CH::initHost(host_ptr, N, 0.0);
+  thrust::fill(host_vec.begin(), host_vec.end(), 0.0);
   TH::cudaTimer fullwork;
 
   fullwork.start();
@@ -42,7 +44,7 @@ int main(int argc, char const *argv[]) {
 
   auto elapsedV1 = fullwork.elapsedSeconds() / NumReps;
 
-  CH::initHost(host_ptr, N, 0.0);
+  thrust::fill(host_vec.begin(), host_vec.end(), 0.0);
 
   fullwork.start();
 
