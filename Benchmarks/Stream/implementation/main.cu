@@ -22,7 +22,7 @@ int main(int argc, char const *argv[]) {
            verbose, doCheck);
 
   thrust::device_vector<double> dev_vec(N);
-  thrust::device_vector<double> host_vec(N);
+  thrust::host_vector<double> host_vec(N);
 
   auto sizeinGB = dev_vec.size() * sizeof(dev_vec[0]);
 
@@ -38,6 +38,8 @@ int main(int argc, char const *argv[]) {
     NumReps, N, NumStreams, host, dev, NumBlocks, NumThredsPBlock, verbose);
   fullwork.stop();
 
+  cudaDeviceSynchronize();
+
   if (doCheck) {
     checkSolution(host, N, NumReps);
   }
@@ -52,6 +54,8 @@ int main(int argc, char const *argv[]) {
     NumReps, N, NumStreams, host, dev, NumBlocks, NumThredsPBlock, verbose);
 
   fullwork.stop();
+
+  cudaDeviceSynchronize();
 
   if (doCheck) {
     checkSolution(host, N, NumReps);
