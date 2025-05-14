@@ -24,7 +24,7 @@ int main(int argc, char const *argv[]) {
   thrust::device_vector<double> dev_vec(N);
   thrust::host_vector<double> host_vec(N);
 
-  auto sizeinGB = dev_vec.size() * sizeof(dev_vec[0]);
+  auto sizeinGB = dev_vec.size() * sizeof(dev_vec[0])  * 1.0 / 1e9;
 
 
   auto dev = thrust::raw_pointer_cast(dev_vec.data());
