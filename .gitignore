@@ -20,3 +20,6 @@ executable
 
 #SLURM_FILES
 SLURM_*_FILES
+
+#simlation data files
+simdata
