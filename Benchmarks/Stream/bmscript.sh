@@ -2,7 +2,7 @@
 #
 #SBATCH --output=./SLURM_OUT_FILES/%j_%x.out
 #SBATCH -J stream_GPU_bw100
-#SBATCH --gres=gpu:a100:1 
+#SBATCH --gres=gpu:a100:1 -C a100_80
 #SBATCH --nodes=1
 #SBATCH --time=00:30:00
 #SBATCH --export=NONE
@@ -22,16 +22,11 @@ benchmark of simple single gpu streaming kernel on $gpgpu
 echo "$description"
 
 module purge
-module load cuda nvhpc cmake
+module load cuda cmake
 
 [ ! -d simdata ] && mkdir -p simdata
 resfile=./simdata/${SLURM_JOBID}_resfile
 touch $resfile
-
-export http_proxy=http://proxy.nhr.fau.de:80
-export https_proxy=http://proxy.nhr.fau.de:80
-#cmake -S . -B build/ -DCMAKE_BUILD_TYPE:STRING=Release >/dev/null
-#cmake --build build/ -j >/dev/null
 
 echo "--------------------------------------------------------------"
 echo "varying problem size ":
@@ -42,10 +37,10 @@ executable=./executable/stream_$SLURM_JOB_ID
 cp ./executable/stream $executable
 
 val12pow=116
-for ((i = 0; i <= $val12pow; i += 1)); do
+for ((i = 0; i <= $val12pow; i += 4)); do
     echo "$i of $val12pow start"
     numelem=$(echo "12^$i/10^$i" | bc)
-    $executable -CV -N $numelem -R 24 -B 3456 -T 256 -S 30 >>$resfile
+    $executable -CV -N $numelem -R 24 -B 3456 -T 256 -S 1 >>$resfile
 done
 
 module load python
