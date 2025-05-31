@@ -20,32 +20,20 @@ namespace SH = stream_helper;
 namespace TH = cuda_timer_helper;
 
 template <typename VT>
-std::tuple<float, float, float> benchmarkStream(
-  size_t NumReps, size_t N, VT *host, VT *dev,
-  size_t NumBlocks, size_t NumThredsPBlock, bool verboseinfo) {
+std::tuple<float, float, float> benchmarkStream(size_t NumReps, size_t N,
+                                                VT *host, VT *dev,
+                                                size_t NumBlocks,
+                                                size_t NumThredsPBlock,
+                                                bool verboseinfo) {
 
-    float timerh2d{0.0};
+  float timerh2d{0.0};
   float timerd2h{0.0};
   float timerkern{0.0};
   TH::cudaTimer timer;
 
+  
 
   for (size_t rep = 0; rep < NumReps; rep++) {
-
-    for (size_t chunkstart = 0, i = 0; i < NumStreams; i++) {
-      size_t currentChunkSize = baseChunkSize + (i < remainder ? 1 : 0);
-      if (verboseinfo) {
-        timer.setStream(streams[i]);
-        timer.start();
-      }
-      CH::asyncMemcpyH2D(host + chunkstart, dev + chunkstart, currentChunkSize,
-                         streams[i]);
-      if (verboseinfo) {
-        timer.stop();
-        timerh2d += timer.elapsedSeconds();
-      }
-      chunkstart += currentChunkSize;
-    }
 
     for (size_t chunkstart = 0, i = 0; i < NumStreams; i++) {
       size_t currentChunkSize = baseChunkSize + (i < remainder ? 1 : 0);
@@ -62,25 +50,9 @@ std::tuple<float, float, float> benchmarkStream(
       CHECK_CUDA_LASTERR("Stream Launch failure");
       chunkstart += currentChunkSize;
     }
-
-    for (size_t chunkstart = 0, i = 0; i < NumStreams; i++) {
-      size_t currentChunkSize = baseChunkSize + (i < remainder ? 1 : 0);
-      if (verboseinfo) {
-        timer.setStream(streams[i]);
-        timer.start();
-      }
-      CH::asyncMemcpyD2H(dev + chunkstart, host + chunkstart, currentChunkSize,
-                         streams[i]);
-      if (verboseinfo) {
-        timer.stop();
-        timerd2h += timer.elapsedSeconds();
-      }
-      chunkstart += currentChunkSize;
-    }
-    CHECK_CUDA_ERR(cudaDeviceSynchronize());
   }
 
-  return {timerh2d / NumReps, timerkern / NumReps, timerd2h / NumReps};
+  return {timerh2d, timerkern / NumReps, timerd2h};
 }
 
 #endif
