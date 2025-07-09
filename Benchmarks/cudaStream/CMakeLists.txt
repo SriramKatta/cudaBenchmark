@@ -4,7 +4,7 @@ project(stream LANGUAGES CUDA CXX)
 
 find_package(CUDAToolkit REQUIRED)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/executable)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/executable)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(DISABLE_NVTX "Disable NVTX instrumentation" OFF)
